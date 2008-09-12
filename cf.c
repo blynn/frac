@@ -1,4 +1,6 @@
 // Demand channels. See squint paper by McIlroy.
+//
+// TODO: Free unread channels on exit.
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -31,6 +33,10 @@ struct cf_s {
 };
 
 typedef struct cf_s *cf_t;
+
+void *cf_data(cf_t cf) {
+  return cf->data;
+}
 
 int cf_wait(cf_t cf) {
   // Wait for 'demand' signal.
@@ -110,7 +116,7 @@ void cf_get(mpz_t z, cf_t cf) {
   pthread_mutex_unlock(&cf->chan_mu);
 }
 
-cf_t cf_new(void *(*func)(cf_t)) {
+cf_t cf_new(void *(*func)(cf_t), void *data) {
   cf_t cf = malloc(sizeof(*cf));
   pthread_attr_t attr;
   pthread_cond_init(&cf->demand, NULL);
@@ -126,40 +132,8 @@ cf_t cf_new(void *(*func)(cf_t)) {
   cf->chan = NULL;
   cf->next = NULL;
   cf->quitflag = 0;
-
+  cf->data = data;
   pthread_create(&cf->thread, &attr, (void*(*)(void *)) func, cf);
   pthread_attr_destroy(&attr);
   return cf;
-}
-
-static void *sqrt2(cf_t cf) {
-  mpz_t z;
-  mpz_init(z);
-  mpz_set_ui(z, 1);
-  cf_put(cf, z);
-  mpz_set_ui(z, 2);
-  while(cf_wait(cf)) {
-    cf_put(cf, z);
-  }
-  mpz_clear(z);
-  return NULL;
-}
-
-cf_t cf_new_sqrt2() {
-  return cf_new(sqrt2);
-}
-
-int main() {
-  mpz_t z;
-  mpz_init(z);
-  cf_t a;
-  a = cf_new_sqrt2();
-  for (int i = 0; i < 10; i++) {
-    cf_signal(a);
-    cf_get(z, a);
-    gmp_printf("a: %Zd\n", z);
-  }
-  cf_free(a);
-  mpz_clear(z);
-  return 0;
 }
