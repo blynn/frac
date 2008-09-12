@@ -24,7 +24,14 @@ void *cf_data(cf_t cf);
 // Outputs p then q on channel, where p/q is the last convergent computed.
 cf_t cf_new_convergent(cf_t x);
 
-// Compute convergents of (a x + b)/(c x + d) where x is a continued fraction.
+// Compute convergents of (a x + b)/(c x + d)
+// where x is a regular continued fraction.
 cf_t cf_new_convergent_mobius(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d);
+
+// Compute convergents of (a x + b)/(c x + d)
+// where x is a nonregular continued fraction.
+cf_t cf_new_convergent_nonregular(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d);
+
+cf_t cf_new_nonregular_to_cf(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d);
 
 #endif  // __CF_H__

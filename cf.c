@@ -1,6 +1,10 @@
 // Demand channels. See squint paper by McIlroy.
 //
+// TODO: Call signal within get.
 // TODO: Free unread channels on exit.
+// TODO: Handle messy thread problems. What happens if a thread quits
+// but then another tries to signal and read its channel?
+// TODO: What if the continued fraction terminates?
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -39,17 +43,26 @@ void *cf_data(cf_t cf) {
 }
 
 int cf_wait(cf_t cf) {
-  // Wait for 'demand' signal.
-  pthread_cond_wait(&cf->demand, &cf->demand_mu);
-  // Acknowledge it, allowing future 'demand' signals.
-  pthread_mutex_lock(&cf->ack_mu);
-  pthread_cond_signal(&cf->ack);
-  pthread_mutex_unlock(&cf->ack_mu);
-  if (cf->quitflag) {
-    pthread_mutex_unlock(&cf->demand_mu);
-    return 0;
+  for (;;) {
+    // Wait for 'demand' signal.
+    pthread_cond_wait(&cf->demand, &cf->demand_mu);
+    // Acknowledge it, allowing future 'demand' signals.
+    pthread_mutex_lock(&cf->ack_mu);
+    pthread_cond_signal(&cf->ack);
+    pthread_mutex_unlock(&cf->ack_mu);
+    if (cf->quitflag) {
+      pthread_mutex_unlock(&cf->demand_mu);
+      return 0;
+    }
+    pthread_mutex_lock(&cf->chan_mu);
+    // If there is still unread output, don't compute yet.
+    if (cf->chan) {
+      pthread_mutex_unlock(&cf->chan_mu);
+      continue;
+    }
+    pthread_mutex_unlock(&cf->chan_mu);
+    return 1;
   }
-  return 1;
 }
 
 void cf_signal(cf_t cf) {
@@ -74,7 +87,7 @@ void cf_free(cf_t cf) {
 }
 
 void cf_put(cf_t cf, mpz_t z) {
-  // TODO: Block or something if there's a lot on the queue.
+  // TODO: Block or something if there's a large backlog on the queue.
   channel_ptr cnew = malloc(sizeof(*cnew));
   size_t count = (mpz_sizeinbase(z, 2) + 8 - 1) / 8;
   unsigned char *uc = malloc(count + 4);
