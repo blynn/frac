@@ -38,7 +38,6 @@ int main() {
 
   conv = cf_new_nonregular_to_cf(pi, a, b, c, d);
   for (int i = 1; i <= 100; i++) {
-    cf_signal(conv);
     cf_get(z, conv);
     gmp_printf(" %Zd",z);
   }

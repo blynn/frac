@@ -86,7 +86,6 @@ static void *mobius(cf_t cf) {
   mpz_t denom;
   mpz_init(denom);
   while(cf_wait(cf)) {
-    cf_signal(input);
     cf_get(denom, input);
     pqset_regular_recur(pq, denom);
 
@@ -148,13 +147,10 @@ static void *mobius_nonregular(cf_t cf) {
     pqset_next(pq);
   }
   mpz_set_ui(num, 1);
-  cf_signal(input);
   cf_get(denom, input);
   recur();
   while(cf_wait(cf)) {
-    cf_signal(input);
     cf_get(num, input);
-    cf_signal(input);
     cf_get(denom, input);
     recur();
   }
@@ -221,14 +217,11 @@ static void *mobius_nonregular_throughput(cf_t cf) {
     return 0;
   }
   mpz_set_ui(num, 1);
-  cf_signal(input);
   cf_get(denom, input);
   recur();
   while(cf_wait(cf)) {
     do {
-      cf_signal(input);
       cf_get(num, input);
-      cf_signal(input);
       cf_get(denom, input);
     } while(!recur());
   }

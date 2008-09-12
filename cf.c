@@ -1,6 +1,5 @@
 // Demand channels. See squint paper by McIlroy.
 //
-// TODO: Call signal within get.
 // TODO: Free unread channels on exit.
 // TODO: Handle messy thread problems. What happens if a thread quits
 // but then another tries to signal and read its channel?
@@ -112,8 +111,10 @@ void cf_put(cf_t cf, mpz_t z) {
 
 void cf_get(mpz_t z, cf_t cf) {
   pthread_mutex_lock(&cf->chan_mu);
-  // Wait for signal if channel is empty.
   if (!cf->chan) {
+    // If channel is empty, send demand signal and wait for ready-to-read
+    // signal.
+    cf_signal(cf);
     pthread_cond_wait(&cf->read_cond, &cf->chan_mu);
   }
   channel_ptr c = cf->chan;

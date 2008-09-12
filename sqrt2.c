@@ -31,7 +31,6 @@ int main() {
   mpz_init(p);
   mpz_init(q);
   for (int i = 0; i < 10; i++) {
-    cf_signal(conv);
     cf_get(p, conv);
     cf_get(q, conv);
     gmp_printf("p/q = %Zd/%Zd\n", p, q);

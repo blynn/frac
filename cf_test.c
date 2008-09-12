@@ -22,7 +22,6 @@ int main() {
   cf_t a;
   a = cf_new(count_fn, NULL);
   for (int i = 1; i <= 10; i++) {
-    cf_signal(a);
     cf_get(z, a);
     EXPECT(!mpz_cmp_ui(z, i));
   }
