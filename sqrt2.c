@@ -23,20 +23,21 @@ cf_t cf_new_sqrt2() {
 }
 
 int main() {
-  cf_t a, b;
-  a = cf_new_sqrt2();
-  b = cf_new_convergent(a);
+  cf_t x, conv;
+  x = cf_new_sqrt2();
+  conv = cf_new_convergent(x);
 
   mpz_t p, q;
   mpz_init(p);
   mpz_init(q);
   for (int i = 0; i < 10; i++) {
-    cf_signal(b);
-    cf_get(p, b);
-    cf_get(q, b);
+    cf_signal(conv);
+    cf_get(p, conv);
+    cf_get(q, conv);
     gmp_printf("p/q = %Zd/%Zd\n", p, q);
   }
-  cf_free(a);
+  cf_free(conv);
+  cf_free(x);
   mpz_clear(p);
   mpz_clear(q);
   return 0;

@@ -20,8 +20,11 @@ int cf_wait(cf_t cf);
 void *cf_data(cf_t cf);
 
 // cf_converge.c:
-// Compute convergents of a simple continued fraction.
+// Compute convergents of a simple continued fraction x.
 // Outputs p then q on channel, where p/q is the last convergent computed.
-cf_t cf_new_convergent(cf_t a);
+cf_t cf_new_convergent(cf_t x);
+
+// Compute convergents of (a x + b)/(c x + d) where x is a continued fraction.
+cf_t cf_new_convergent_mobius(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d);
 
 #endif  // __CF_H__
