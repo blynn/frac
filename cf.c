@@ -21,10 +21,8 @@ struct cf_s {
   pthread_t thread;
 
   // Signal 'demand' to compute next term.
-  // 'ack' acknowledges that the signal was received,
-  // to prevent a new 'demand' signal while processing a previous one.
-  pthread_cond_t demand, ack;
-  pthread_mutex_t demand_mu, ack_mu;
+  pthread_cond_t demand;
+  pthread_mutex_t demand_mu;
 
   // Demand channel.
   pthread_cond_t read_cond;
@@ -45,10 +43,6 @@ int cf_wait(cf_t cf) {
   for (;;) {
     // Wait for 'demand' signal.
     pthread_cond_wait(&cf->demand, &cf->demand_mu);
-    // Acknowledge it, allowing future 'demand' signals.
-    pthread_mutex_lock(&cf->ack_mu);
-    pthread_cond_signal(&cf->ack);
-    pthread_mutex_unlock(&cf->ack_mu);
     if (cf->quitflag) {
       pthread_mutex_unlock(&cf->demand_mu);
       return 0;
@@ -68,7 +62,6 @@ void cf_signal(cf_t cf) {
   pthread_mutex_lock(&cf->demand_mu);
   pthread_cond_signal(&cf->demand);
   pthread_mutex_unlock(&cf->demand_mu);
-  pthread_cond_wait(&cf->ack, &cf->ack_mu);
 }
 
 void cf_free(cf_t cf) {
@@ -76,12 +69,9 @@ void cf_free(cf_t cf) {
   pthread_mutex_lock(&cf->demand_mu);
   pthread_cond_signal(&cf->demand);
   pthread_mutex_unlock(&cf->demand_mu);
-  pthread_cond_wait(&cf->ack, &cf->ack_mu);
   pthread_join(cf->thread, NULL);
   pthread_mutex_destroy(&cf->demand_mu);
-  pthread_mutex_destroy(&cf->ack_mu);
   pthread_cond_destroy(&cf->demand);
-  pthread_cond_destroy(&cf->ack);
   free(cf);
 }
 
@@ -112,8 +102,7 @@ void cf_put(cf_t cf, mpz_t z) {
 void cf_get(mpz_t z, cf_t cf) {
   pthread_mutex_lock(&cf->chan_mu);
   if (!cf->chan) {
-    // If channel is empty, send demand signal and wait for ready-to-read
-    // signal.
+    // If channel is empty, send demand signal and wait for read signal.
     cf_signal(cf);
     pthread_cond_wait(&cf->read_cond, &cf->chan_mu);
   }
@@ -135,12 +124,9 @@ cf_t cf_new(void *(*func)(cf_t), void *data) {
   pthread_attr_t attr;
   pthread_cond_init(&cf->demand, NULL);
   pthread_mutex_init(&cf->demand_mu, NULL);
-  pthread_cond_init(&cf->ack, NULL);
-  pthread_mutex_init(&cf->ack_mu, NULL);
   pthread_cond_init(&cf->read_cond, NULL);
   pthread_mutex_init(&cf->chan_mu, NULL);
   pthread_mutex_lock(&cf->demand_mu);
-  pthread_mutex_lock(&cf->ack_mu);
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
   cf->chan = NULL;
