@@ -38,7 +38,9 @@ int main() {
 
   conv = cf_new_nonregular_to_cf(pi, a, b, c, d);
   cf_t dec = cf_new_cf_to_decimal(conv);
-  cf_get(z, dec);
+  // Interestingly, regularizing the continued fraction and
+  // then converting to decimal is faster than doing everything at once:
+  //   conv = cf_new_nonregular_mobius_to_decimal(pi, a, b, c, d);
   for (int i = 1; i <= 5000; i++) {
     cf_get(z, dec);
     gmp_printf("%Zd",z);

@@ -22,7 +22,6 @@ struct cf_s {
 
   // Signal demand to compute next term.
   pthread_cond_t demand;
-  pthread_mutex_t demand_mu;
 
   // Demand channel.
   pthread_cond_t read_cond;
@@ -40,37 +39,22 @@ void *cf_data(cf_t cf) {
 }
 
 int cf_wait(cf_t cf) {
-  for (;;) {
-    // Wait for 'demand' signal.
-    pthread_cond_wait(&cf->demand, &cf->demand_mu);
-    if (cf->quitflag) {
-      pthread_mutex_unlock(&cf->demand_mu);
-      return 0;
-    }
-    pthread_mutex_lock(&cf->chan_mu);
-    // If there is still unread output, don't compute yet.
-    if (cf->chan) {
-      pthread_mutex_unlock(&cf->chan_mu);
-      continue;
-    }
-    pthread_mutex_unlock(&cf->chan_mu);
-    return 1;
+  pthread_mutex_lock(&cf->chan_mu);
+  if (cf->chan) {
+    // If there is still unread output, wait for 'demand' signal.
+    pthread_cond_wait(&cf->demand, &cf->chan_mu);
   }
-}
-
-void cf_signal(cf_t cf) {
-  pthread_mutex_lock(&cf->demand_mu);
-  pthread_cond_signal(&cf->demand);
-  pthread_mutex_unlock(&cf->demand_mu);
+  pthread_mutex_unlock(&cf->chan_mu);
+  if (cf->quitflag) {
+    return 0;
+  }
+  return 1;
 }
 
 void cf_free(cf_t cf) {
   cf->quitflag = 1;
-  pthread_mutex_lock(&cf->demand_mu);
   pthread_cond_signal(&cf->demand);
-  pthread_mutex_unlock(&cf->demand_mu);
   pthread_join(cf->thread, NULL);
-  pthread_mutex_destroy(&cf->demand_mu);
   pthread_cond_destroy(&cf->demand);
   free(cf);
 }
@@ -110,11 +94,12 @@ void cf_get(mpz_t z, cf_t cf) {
   pthread_mutex_lock(&cf->chan_mu);
   if (!cf->chan) {
     // If channel is empty, send demand signal and wait for read signal.
-    cf_signal(cf);
+    pthread_cond_signal(&cf->demand);
     pthread_cond_wait(&cf->read_cond, &cf->chan_mu);
   }
   channel_ptr c = cf->chan;
   cf->chan = c->next;
+  pthread_mutex_unlock(&cf->chan_mu);
   unsigned char *uc = c->data;
   size_t count = uc[3]
                + (uc[2] << 8)
@@ -124,17 +109,14 @@ void cf_get(mpz_t z, cf_t cf) {
   else mpz_set_ui(z, 0);
   free(c->data);
   free(c);
-  pthread_mutex_unlock(&cf->chan_mu);
 }
 
 cf_t cf_new(void *(*func)(cf_t), void *data) {
   cf_t cf = malloc(sizeof(*cf));
   pthread_attr_t attr;
   pthread_cond_init(&cf->demand, NULL);
-  pthread_mutex_init(&cf->demand_mu, NULL);
   pthread_cond_init(&cf->read_cond, NULL);
   pthread_mutex_init(&cf->chan_mu, NULL);
-  pthread_mutex_lock(&cf->demand_mu);
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
   cf->chan = NULL;
