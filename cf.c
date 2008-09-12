@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <gmp.h>
 
 struct channel_s {
   void *data;
@@ -31,7 +32,7 @@ struct cf_s {
 
 typedef struct cf_s *cf_t;
 
-void cf_wait(cf_t cf) {
+int cf_wait(cf_t cf) {
   // Wait for 'demand' signal.
   pthread_cond_wait(&cf->demand, &cf->demand_mu);
   // Acknowledge it, allowing future 'demand' signals.
@@ -40,8 +41,9 @@ void cf_wait(cf_t cf) {
   pthread_mutex_unlock(&cf->ack_mu);
   if (cf->quitflag) {
     pthread_mutex_unlock(&cf->demand_mu);
-    pthread_exit(NULL);
+    return 0;
   }
+  return 1;
 }
 
 void cf_signal(cf_t cf) {
@@ -65,9 +67,17 @@ void cf_free(cf_t cf) {
   free(cf);
 }
 
-void cf_put(cf_t cf, int i) {
+void cf_put(cf_t cf, mpz_t z) {
+  // TODO: Block or something if there's a lot on the queue.
   channel_ptr cnew = malloc(sizeof(*cnew));
-  cnew->data = (void *) i;
+  size_t count = (mpz_sizeinbase(z, 2) + 8 - 1) / 8;
+  unsigned char *uc = malloc(count + 4);
+  cnew->data = uc;
+  uc[0] = count >> (8 * 3);
+  uc[1] = (count >> (8 * 2)) & 255;
+  uc[2] = (count >> 8) & 255;
+  uc[3] = count & 255;
+  mpz_export(uc + 4, NULL, 1, 1, 1, 0, z);
   cnew->next = NULL;
   pthread_mutex_lock(&cf->chan_mu);
   if (cf->chan) {
@@ -81,18 +91,23 @@ void cf_put(cf_t cf, int i) {
   pthread_mutex_unlock(&cf->chan_mu);
 }
 
-int cf_get(cf_t cf) {
+void cf_get(mpz_t z, cf_t cf) {
   pthread_mutex_lock(&cf->chan_mu);
   // Wait for signal if channel is empty.
   if (!cf->chan) {
     pthread_cond_wait(&cf->read_cond, &cf->chan_mu);
   }
   channel_ptr c = cf->chan;
-  int i = (int) c->data;
   cf->chan = c->next;
+  unsigned char *uc = c->data;
+  size_t count = uc[3]
+               + (uc[2] << 8)
+               + (uc[1] << (8 * 2))
+               + (uc[0] << (8 * 3));
+  mpz_import(z, count, 1, 1, 1, 0, uc + 4);
+  free(c->data);
   free(c);
   pthread_mutex_unlock(&cf->chan_mu);
-  return i;
 }
 
 cf_t cf_new(void *(*func)(cf_t)) {
@@ -118,11 +133,15 @@ cf_t cf_new(void *(*func)(cf_t)) {
 }
 
 static void *sqrt2(cf_t cf) {
-  cf_put(cf, 1);
-  for (;;) {
-    cf_wait(cf);
-    cf_put(cf, 2);
+  mpz_t z;
+  mpz_init(z);
+  mpz_set_ui(z, 1);
+  cf_put(cf, z);
+  mpz_set_ui(z, 2);
+  while(cf_wait(cf)) {
+    cf_put(cf, z);
   }
+  mpz_clear(z);
   return NULL;
 }
 
@@ -131,12 +150,16 @@ cf_t cf_new_sqrt2() {
 }
 
 int main() {
+  mpz_t z;
+  mpz_init(z);
   cf_t a;
   a = cf_new_sqrt2();
   for (int i = 0; i < 10; i++) {
     cf_signal(a);
-    printf("a: %d\n", cf_get(a));
+    cf_get(z, a);
+    gmp_printf("a: %Zd\n", z);
   }
   cf_free(a);
+  mpz_clear(z);
   return 0;
 }
