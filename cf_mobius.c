@@ -30,6 +30,11 @@ void pqset_clear(pqset_t pq) {
   mpz_clear(pq->qnew);
 }
 
+void pqset_print(pqset_t pq) {
+  gmp_printf("p's: %Zd %Zd %Zd\n", pq->pold, pq->p, pq->pnew);
+  gmp_printf("q's: %Zd %Zd %Zd\n", pq->qold, pq->q, pq->qnew);
+}
+
 // Compute the next convergent for regular continued fractions.
 void pqset_regular_recur(pqset_t pq, mpz_t denom) {
   mpz_mul(pq->pnew, pq->p, denom);
@@ -105,39 +110,26 @@ static void *mobius(cf_t cf) {
 }
 cf_t cf_new_convergent_mobius(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
   mobius_data_ptr md = malloc(sizeof(*md));
-  mpz_init(md->a);
-  mpz_init(md->b);
-  mpz_init(md->c);
-  mpz_init(md->d);
-  mpz_set(md->a, a);
-  mpz_set(md->b, b);
-  mpz_set(md->c, c);
-  mpz_set(md->d, d);
+  mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
+  mpz_set(md->a, a); mpz_set(md->b, b); mpz_set(md->c, c); mpz_set(md->d, d);
   md->input = x;
   return cf_new(mobius, md);
 }
 
 cf_t cf_new_convergent(cf_t x) {
   mpz_t one, zero;
-  mpz_init(one);
-  mpz_init(zero);
-  mpz_set_ui(one, 1);
-  mpz_set_ui(zero, 0);
+  mpz_init(one); mpz_init(zero);
+  mpz_set_ui(one, 1); mpz_set_ui(zero, 0);
   return cf_new_convergent_mobius(x, one, zero, zero, one);
-  mpz_clear(one);
-  mpz_clear(zero);
+  mpz_clear(one); mpz_clear(zero);
 }
 
 static void *mobius_nonregular(cf_t cf) {
   mobius_data_ptr md = cf_data(cf);
   cf_t input = md->input;
-  pqset_t pq;
-  pqset_init(pq);
-  pqset_set_mobius(pq, md);
-  mpz_t num;
-  mpz_init(num);
-  mpz_t denom;
-  mpz_init(denom);
+  pqset_t pq; pqset_init(pq); pqset_set_mobius(pq, md);
+  mpz_t num; mpz_init(num);
+  mpz_t denom; mpz_init(denom);
   void recur() {
     pqset_nonregular_recur(pq, num, denom);
     pqset_remove_gcd(pq);
@@ -157,23 +149,14 @@ static void *mobius_nonregular(cf_t cf) {
   mpz_clear(denom);
   pqset_clear(pq);
 
-  mpz_clear(md->a);
-  mpz_clear(md->b);
-  mpz_clear(md->c);
-  mpz_clear(md->d);
+  mpz_clear(md->a); mpz_clear(md->b); mpz_clear(md->c); mpz_clear(md->d);
   free(md);
   return NULL;
 }
 cf_t cf_new_convergent_nonregular(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
   mobius_data_ptr md = malloc(sizeof(*md));
-  mpz_init(md->a);
-  mpz_init(md->b);
-  mpz_init(md->c);
-  mpz_init(md->d);
-  mpz_set(md->a, a);
-  mpz_set(md->b, b);
-  mpz_set(md->c, c);
-  mpz_set(md->d, d);
+  mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
+  mpz_set(md->a, a); mpz_set(md->b, b); mpz_set(md->c, c); mpz_set(md->d, d);
   md->input = x;
   return cf_new(mobius_nonregular, md);
 }
@@ -181,15 +164,10 @@ cf_t cf_new_convergent_nonregular(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
 static void *mobius_nonregular_throughput(cf_t cf) {
   mobius_data_ptr md = cf_data(cf);
   cf_t input = md->input;
-  pqset_t pq;
-  pqset_init(pq);
-  pqset_set_mobius(pq, md);
-  mpz_t num;
-  mpz_init(num);
-  mpz_t denom;
-  mpz_init(denom);
-  mpz_t t0, t1;
-  mpz_init(t1); mpz_init(t0);
+  pqset_t pq; pqset_init(pq); pqset_set_mobius(pq, md);
+  mpz_t num; mpz_init(num);
+  mpz_t denom; mpz_init(denom);
+  mpz_t t0, t1; mpz_init(t1); mpz_init(t0);
   int recur() {
     pqset_nonregular_recur(pq, num, denom);
     pqset_remove_gcd(pq);
@@ -201,11 +179,13 @@ static void *mobius_nonregular_throughput(cf_t cf) {
     // TODO: What if one of these equals zero?
     if (mpz_cmp(pq->qold, pq->pnew) < 0) {
       mpz_add(pq->qold, pq->qold, pq->qnew);
-      //if (!mpz_cmp(pold, qold)) {
       if (mpz_cmp(pq->qold, pq->pnew) > 0) {
+	// Output continued fraction term.
 	cf_put(cf, pq->pold);
+	// Compute remainder of pnew/qnew.
 	mpz_sub(t1, pq->qold, pq->pnew);
 	mpz_sub(t1, pq->qnew, t1);
+
 	mpz_set(pq->pold, pq->q);
 	mpz_set(pq->qold, t0);
 	mpz_set(pq->p, pq->qnew);
@@ -228,24 +208,79 @@ static void *mobius_nonregular_throughput(cf_t cf) {
   mpz_clear(denom);
   pqset_clear(pq);
 
-  mpz_clear(md->a);
-  mpz_clear(md->b);
-  mpz_clear(md->c);
-  mpz_clear(md->d);
+  mpz_clear(md->a); mpz_clear(md->b); mpz_clear(md->c); mpz_clear(md->d);
   free(md);
   mpz_clear(t1); mpz_clear(t0);
   return NULL;
 }
 cf_t cf_new_nonregular_to_cf(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
   mobius_data_ptr md = malloc(sizeof(*md));
-  mpz_init(md->a);
-  mpz_init(md->b);
-  mpz_init(md->c);
-  mpz_init(md->d);
-  mpz_set(md->a, a);
-  mpz_set(md->b, b);
-  mpz_set(md->c, c);
-  mpz_set(md->d, d);
+  mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
+  mpz_set(md->a, a); mpz_set(md->b, b); mpz_set(md->c, c); mpz_set(md->d, d);
   md->input = x;
   return cf_new(mobius_nonregular_throughput, md);
+}
+
+static void *mobius_decimal(cf_t cf) {
+  mobius_data_ptr md = cf_data(cf);
+  cf_t input = md->input;
+  pqset_t pq; pqset_init(pq); pqset_set_mobius(pq, md);
+  mpz_t denom; mpz_init(denom);
+  mpz_t t0, t1; mpz_init(t1); mpz_init(t0);
+  int recur() {
+    pqset_regular_recur(pq, denom);
+
+    // If the denominator is zero, we can't do anything yet.
+    if (mpz_sgn(pq->q)) {
+      mpz_fdiv_qr(pq->pold, t0, pq->p, pq->q);
+      mpz_mul(pq->qold, pq->pold, pq->qnew);
+
+      // TODO: What if we're comparing equals?
+      if (mpz_cmp(pq->qold, pq->pnew) < 0) {
+	mpz_add(pq->qold, pq->qold, pq->qnew);
+	if (mpz_cmp(pq->qold, pq->pnew) > 0) {
+	  // Output a decimal digit.
+	  cf_put(cf, pq->pold);
+	  // Compute t1 = remainder of pnew/qnew.
+	  mpz_sub(t1, pq->qold, pq->pnew);
+	  mpz_sub(t1, pq->qnew, t1);
+	  // Multiply numerator by 10.
+	  mpz_mul_ui(pq->pold, t0, 10);
+	  mpz_set(pq->qold, pq->q);
+	  mpz_mul_ui(pq->p, t1, 10);
+	  mpz_set(pq->q, pq->qnew);
+	  return 1;
+	}
+      }
+    }
+    pqset_next(pq);
+    return 0;
+  }
+
+  while(cf_wait(cf)) {
+    do {
+      cf_get(denom, input);
+    } while(!recur());
+  }
+  mpz_clear(denom);
+  pqset_clear(pq);
+  mpz_clear(t0); mpz_clear(t1);
+  mpz_clear(md->a); mpz_clear(md->b); mpz_clear(md->c); mpz_clear(md->d);
+  free(md);
+  return NULL;
+}
+cf_t cf_new_mobius_to_decimal(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
+  mobius_data_ptr md = malloc(sizeof(*md));
+  mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
+  mpz_set(md->a, a); mpz_set(md->b, b); mpz_set(md->c, c); mpz_set(md->d, d);
+  md->input = x;
+  return cf_new(mobius_decimal, md);
+}
+
+cf_t cf_new_cf_to_decimal(cf_t x) {
+  mpz_t one, zero;
+  mpz_init(one); mpz_init(zero);
+  mpz_set_ui(one, 1); mpz_set_ui(zero, 0);
+  return cf_new_mobius_to_decimal(x, one, zero, zero, one);
+  mpz_clear(one); mpz_clear(zero);
 }

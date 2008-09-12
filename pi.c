@@ -37,9 +37,13 @@ int main() {
   mpz_set_ui(c, 1); mpz_set_ui(d, 0);
 
   conv = cf_new_nonregular_to_cf(pi, a, b, c, d);
-  for (int i = 1; i <= 100; i++) {
-    cf_get(z, conv);
-    gmp_printf(" %Zd",z);
+  cf_t dec = cf_new_cf_to_decimal(conv);
+  cf_get(z, dec);
+  for (int i = 1; i <= 5000; i++) {
+    cf_get(z, dec);
+    gmp_printf("%Zd",z);
+    if (!(i%5)) printf(" ");
+    if (!(i%50)) printf("\n");
   }
   printf("\n");
   cf_free(conv);

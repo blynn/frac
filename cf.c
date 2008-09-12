@@ -20,7 +20,7 @@ struct cf_s {
   // Each continued fraction is a separate thread.
   pthread_t thread;
 
-  // Signal 'demand' to compute next term.
+  // Signal demand to compute next term.
   pthread_cond_t demand;
   pthread_mutex_t demand_mu;
 
@@ -78,20 +78,27 @@ void cf_free(cf_t cf) {
 void cf_put(cf_t cf, mpz_t z) {
   // TODO: Block or something if there's a large backlog on the queue.
   channel_ptr cnew = malloc(sizeof(*cnew));
-  size_t count = (mpz_sizeinbase(z, 2) + 8 - 1) / 8;
-  unsigned char *uc = malloc(count + 4);
-  cnew->data = uc;
-  uc[0] = count >> (8 * 3);
-  uc[1] = (count >> (8 * 2)) & 255;
-  uc[2] = (count >> 8) & 255;
-  uc[3] = count & 255;
-  mpz_export(uc + 4, NULL, 1, 1, 1, 0, z);
+  if (!mpz_sgn(z)) {
+    unsigned char *uc = malloc(4);
+    uc[0] = uc[1] = uc[2] = uc[3] = 0;
+    cnew->data=uc;
+  } else {
+    size_t count = (mpz_sizeinbase(z, 2) + 8 - 1) / 8;
+    unsigned char *uc = malloc(count + 4);
+    cnew->data = uc;
+    uc[0] = count >> (8 * 3);
+    uc[1] = (count >> (8 * 2)) & 255;
+    uc[2] = (count >> 8) & 255;
+    uc[3] = count & 255;
+    mpz_export(uc + 4, NULL, 1, 1, 1, 0, z);
+  }
   cnew->next = NULL;
   pthread_mutex_lock(&cf->chan_mu);
   if (cf->chan) {
     cf->next->next = cnew;
   } else {
-    // Channel is empty so send signal in case someone is waiting for it.
+    // Channel is empty. Now that we're populating it, send signal
+    // in case someone is waiting for data.
     cf->chan = cnew;
     pthread_cond_signal(&cf->read_cond);
   }
@@ -113,7 +120,8 @@ void cf_get(mpz_t z, cf_t cf) {
                + (uc[2] << 8)
                + (uc[1] << (8 * 2))
                + (uc[0] << (8 * 3));
-  mpz_import(z, count, 1, 1, 1, 0, uc + 4);
+  if (count) mpz_import(z, count, 1, 1, 1, 0, uc + 4);
+  else mpz_set_ui(z, 0);
   free(c->data);
   free(c);
   pthread_mutex_unlock(&cf->chan_mu);

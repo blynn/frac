@@ -9,8 +9,8 @@ static void *count_fn(cf_t cf) {
   mpz_init(z);
   mpz_set_ui(z, 0);
   while(cf_wait(cf)) {
-    mpz_add_ui(z, z, 1);
     cf_put(cf, z);
+    mpz_add_ui(z, z, 1);
   }
   mpz_clear(z);
   return NULL;
@@ -21,7 +21,7 @@ int main() {
   mpz_init(z);
   cf_t a;
   a = cf_new(count_fn, NULL);
-  for (int i = 1; i <= 10; i++) {
+  for (int i = 0; i < 100; i++) {
     cf_get(z, a);
     EXPECT(!mpz_cmp_ui(z, i));
   }
