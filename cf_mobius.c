@@ -120,8 +120,9 @@ cf_t cf_new_convergent(cf_t x) {
   mpz_t one, zero;
   mpz_init(one); mpz_init(zero);
   mpz_set_ui(one, 1); mpz_set_ui(zero, 0);
-  return cf_new_mobius_convergent(x, one, zero, zero, one);
+  cf_t res = cf_new_mobius_convergent(x, one, zero, zero, one);
   mpz_clear(one); mpz_clear(zero);
+  return res;
 }
 
 static void *nonregular_mobius_convergent(cf_t cf) {
@@ -207,6 +208,7 @@ static void *mobius_nonregular_throughput(cf_t cf) {
       cf_get(denom, input);
     } while(!recur());
   }
+  mpz_clear(num);
   mpz_clear(denom);
   pqset_clear(pq);
 
@@ -215,6 +217,7 @@ static void *mobius_nonregular_throughput(cf_t cf) {
   mpz_clear(t1); mpz_clear(t0);
   return NULL;
 }
+
 cf_t cf_new_nonregular_to_cf(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
   mobius_data_ptr md = malloc(sizeof(*md));
   mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
@@ -296,8 +299,9 @@ cf_t cf_new_cf_to_decimal(cf_t x) {
   mpz_t one, zero;
   mpz_init(one); mpz_init(zero);
   mpz_set_ui(one, 1); mpz_set_ui(zero, 0);
-  return cf_new_mobius_to_decimal(x, one, zero, zero, one);
+  cf_t res = cf_new_mobius_to_decimal(x, one, zero, zero, one);
   mpz_clear(one); mpz_clear(zero);
+  return res;
 }
 
 static void *nonregular_mobius_decimal(cf_t cf) {

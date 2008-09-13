@@ -48,6 +48,7 @@ int main() {
     if (!(i%50)) printf("\n");
   }
   printf("\n");
+  cf_free(dec);
   cf_free(conv);
   cf_free(pi);
   mpz_clear(z);
