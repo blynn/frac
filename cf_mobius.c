@@ -37,10 +37,10 @@ void pqset_print(pqset_t pq) {
 
 // Compute the next convergent for regular continued fractions.
 void pqset_regular_recur(pqset_t pq, mpz_t denom) {
-  mpz_mul(pq->pnew, pq->p, denom);
-  mpz_add(pq->pnew, pq->pnew, pq->pold);
-  mpz_mul(pq->qnew, pq->q, denom);
-  mpz_add(pq->qnew, pq->qnew, pq->qold);
+  mpz_addmul(pq->pold, denom, pq->p);
+  mpz_swap(pq->pold, pq->p);
+  mpz_addmul(pq->qold, denom, pq->q);
+  mpz_swap(pq->qold, pq->q);
 }
 
 // Compute the next convergent for nonregular continued fractions.
@@ -98,9 +98,8 @@ static void *mobius_convergent(cf_t cf) {
     cf_get(denom, input);
     pqset_regular_recur(pq, denom);
 
-    cf_put(cf, pq->pnew);
-    cf_put(cf, pq->qnew);
-    pqset_next(pq);
+    cf_put(cf, pq->p);
+    cf_put(cf, pq->q);
   }
   mpz_clear(denom);
   pqset_clear(pq);
@@ -241,12 +240,12 @@ static void *mobius_decimal(cf_t cf) {
   cf_t input = md->input;
   pqset_t pq; pqset_init(pq); pqset_set_mobius(pq, md);
   mpz_t denom; mpz_init(denom);
-  mpz_t t0, t1; mpz_init(t1); mpz_init(t0);
+  mpz_t t0, t1, t2; mpz_init(t2); mpz_init(t1); mpz_init(t0);
   int recur() {
     pqset_regular_recur(pq, denom);
 
     // If the denominator is zero, we can't do anything yet.
-    if (mpz_sgn(pq->q)) {
+    if (mpz_sgn(pq->qold)) {
       // The answer is one of {0, ..., 9}.
       /* Naive attempt to expoit this didn't work well:
       int i;
@@ -261,27 +260,23 @@ static void *mobius_decimal(cf_t cf) {
       mpz_mul(pq->qold, pq->pold, pq->qnew);
       */
 
-      mpz_fdiv_qr(pq->pold, t0, pq->p, pq->q);
-      mpz_mul(pq->qold, pq->pold, pq->qnew);
-      // TODO: What if we're comparing equals?
-      if (mpz_cmp(pq->qold, pq->pnew) < 0) {
-	mpz_add(pq->qold, pq->qold, pq->qnew);
-	if (mpz_cmp(pq->qold, pq->pnew) > 0) {
+      mpz_fdiv_qr(t1, t0, pq->pold, pq->qold);
+      mpz_mul(t2, t1, pq->q);
+      if (mpz_cmp(t2, pq->p) <= 0) {
+	mpz_add(t2, t2, pq->q);
+	if (mpz_cmp(t2, pq->p) > 0) {
 	  // Output a decimal digit.
-	  cf_put(cf, pq->pold);
-	  // Compute t1 = remainder of pnew/qnew.
-	  mpz_sub(t1, pq->qold, pq->pnew);
-	  mpz_sub(t1, pq->qnew, t1);
+	  cf_put(cf, t1);
+	  // Compute t2 = remainder of pnew/qnew.
+	  mpz_sub(t2, t2, pq->p);
+	  mpz_sub(t2, pq->q, t2);
 	  // Multiply numerator by 10.
 	  mpz_mul_ui(pq->pold, t0, 10);
-	  mpz_set(pq->qold, pq->q);
-	  mpz_mul_ui(pq->p, t1, 10);
-	  mpz_set(pq->q, pq->qnew);
+	  mpz_mul_ui(pq->p, t2, 10);
 	  return 1;
 	}
       }
     }
-    pqset_next(pq);
     return 0;
   }
 
@@ -292,7 +287,7 @@ static void *mobius_decimal(cf_t cf) {
   }
   mpz_clear(denom);
   pqset_clear(pq);
-  mpz_clear(t0); mpz_clear(t1);
+  mpz_clear(t0); mpz_clear(t1); mpz_clear(t2);
   mpz_clear(md->a); mpz_clear(md->b); mpz_clear(md->c); mpz_clear(md->d);
   free(md);
   return NULL;

@@ -16,6 +16,10 @@ typedef struct bihom_data_s *bihom_data_ptr;
 //   r  p
 // e.g. the s convergent is s0/s1.
 // I work left to right, and top to bottom, unlike Gosper.
+//
+// This notation is different to that in cf_mobius.c. Here, the same fraction
+// has the same letter. There, the numerators were p's, and the denominators
+// were q's.
 struct pqrs_s {
   mpz_t p0, p1;
   mpz_t q0, q1;
