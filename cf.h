@@ -37,9 +37,14 @@ cf_t cf_new_mobius_to_decimal(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d);
 cf_t cf_new_cf_to_decimal(cf_t x);
 cf_t cf_new_nonregular_mobius_to_decimal(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d);
 
+// Well-known continued fraction expansions.
 // cf_famous.c:
 // e:
 cf_t cf_new_e();
 cf_t cf_new_pi();
+cf_t cf_new_epow(mpz_t pow);
+
+// Gosper's method for computing bihomographic functions of continued fractions.
+cf_t cf_new_bihom(cf_t x, cf_t y, mpz_t a[8]);
 
 #endif  // __CF_H__

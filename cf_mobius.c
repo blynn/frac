@@ -70,6 +70,8 @@ void pqset_next(pqset_ptr pq) {
   mpz_set(pq->qold, pq->q); mpz_set(pq->q, pq->qnew);
 }
 
+// A Mobius transformation: four coefficients and the input.
+// TODO: Use an array of size 4.
 struct mobius_data_s {
   cf_t input;
   mpz_t a, b, c, d;
@@ -81,7 +83,9 @@ void pqset_set_mobius(pqset_t pq, mobius_data_ptr md) {
   mpz_set(pq->qold, md->d); mpz_set(pq->q, md->c);
 }
 
-static void *mobius(cf_t cf) {
+// Compute convergents of Mobius function applied to a regular
+// continued fraction.
+static void *mobius_convergent(cf_t cf) {
   mobius_data_ptr md = cf_data(cf);
   cf_t input = md->input;
   pqset_t pq;
@@ -108,14 +112,18 @@ static void *mobius(cf_t cf) {
   free(md);
   return NULL;
 }
+// Start a thread that, when signalled, computes the convergents of a Mobius
+// transformation of a continued fraction.
 cf_t cf_new_mobius_convergent(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
   mobius_data_ptr md = malloc(sizeof(*md));
   mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
   mpz_set(md->a, a); mpz_set(md->b, b); mpz_set(md->c, c); mpz_set(md->d, d);
   md->input = x;
-  return cf_new(mobius, md);
+  return cf_new(mobius_convergent, md);
 }
 
+// Start a thread that, when signalled, computes the convergents of a continued
+// fraction.
 cf_t cf_new_convergent(cf_t x) {
   mpz_t one, zero;
   mpz_init(one); mpz_init(zero);
@@ -125,6 +133,8 @@ cf_t cf_new_convergent(cf_t x) {
   return res;
 }
 
+// Compute convergents of Mobius function applied to a nonregular
+// continued fraction.
 static void *nonregular_mobius_convergent(cf_t cf) {
   mobius_data_ptr md = cf_data(cf);
   cf_t input = md->input;

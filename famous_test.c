@@ -36,6 +36,26 @@ int main() {
   cf_free(conv);
   cf_free(pi);
 
+  e = cf_new_e();
+  pi = cf_new_pi();
+  mpz_t addarray[8];
+  for (int i = 0; i < 8; i++) {
+    mpz_init(addarray[i]);
+    mpz_set_ui(addarray[i], 0);
+  }
+  mpz_set_ui(addarray[1], 1);
+  mpz_set_ui(addarray[2], 1);
+  mpz_set_ui(addarray[7], 1);
+  cf_t b = cf_new_bihom(e, pi, addarray);
+  conv = cf_new_cf_to_decimal(b);
+  cf_get(z, conv);
+  gmp_printf("e + pi = %Zd.", z);
+  for (int i = 0; i <= 20; i++) {
+    cf_get(z, conv);
+    gmp_printf("%Zd", z);
+  }
+  printf("\n");
+
   mpz_clear(z);
   return 0;
 }
