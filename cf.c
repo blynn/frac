@@ -81,20 +81,10 @@ void cf_free(cf_t cf) {
 void cf_put(cf_t cf, mpz_t z) {
   // TODO: Block or something if there's a large backlog on the queue.
   channel_ptr cnew = malloc(sizeof(*cnew));
-  if (!mpz_sgn(z)) {
-    unsigned char *uc = malloc(4);
-    uc[0] = uc[1] = uc[2] = uc[3] = 0;
-    cnew->data = uc;
-  } else {
-    size_t count = (mpz_sizeinbase(z, 2) + 8 - 1) / 8;
-    unsigned char *uc = malloc(count + 4);
-    cnew->data = uc;
-    uc[0] = count >> (8 * 3);
-    uc[1] = (count >> (8 * 2)) & 255;
-    uc[2] = (count >> 8) & 255;
-    uc[3] = count & 255;
-    mpz_export(uc + 4, NULL, 1, 1, 1, 0, z);
-  }
+  mpz_ptr znew = malloc(sizeof(*znew));
+  mpz_init(znew);
+  mpz_set(znew, z);
+  cnew->data = znew;
   cnew->next = NULL;
   pthread_mutex_lock(&cf->chan_mu);
   if (cf->chan) {
@@ -119,13 +109,9 @@ void cf_get(mpz_t z, cf_t cf) {
   channel_ptr c = cf->chan;
   cf->chan = c->next;
   pthread_mutex_unlock(&cf->chan_mu);
-  unsigned char *uc = c->data;
-  size_t count = uc[3]
-               + (uc[2] << 8)
-               + (uc[1] << (8 * 2))
-               + (uc[0] << (8 * 3));
-  if (count) mpz_import(z, count, 1, 1, 1, 0, uc + 4);
-  else mpz_set_ui(z, 0);
+  mpz_ptr znew = c->data;
+  mpz_set(z, znew);
+  mpz_clear(znew);
   free(c->data);
   free(c);
 }

@@ -1,3 +1,5 @@
+// Test demand channel infrastructure.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <gmp.h>
