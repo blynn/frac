@@ -59,31 +59,6 @@ generating 'e' = 2.71828...
 ..............................................................................
 // e = [2; 1, 2, 1, 1, 4, 1, ...]
 static void *e_expansion(cf_t cf) {
-  mpz_t even, one;
-  mpz_init(even); mpz_init(one);
-  mpz_set_ui(even, 2); mpz_set_ui(one, 1);
-
-  cf_put(cf, even);
-
-  while(cf_wait(cf)) {
-    cf_put(cf, one);
-    cf_put(cf, even);
-    mpz_add_ui(even, even, 2);
-    cf_put(cf, one);
-  }
-
-  mpz_clear(one);
-  mpz_clear(even);
-  return NULL;
-}
-..............................................................................
-
-Most of the verbosity is due to GMP. I plan to support plain ints as well by
-automatically upgrading them, so the above would be:
-
-..............................................................................
-// e = [2; 1, 2, 1, 1, 4, 1, ...]
-static void *e_expansion(cf_t cf) {
   int even = 2;
   cf_put_int(cf, even);
 

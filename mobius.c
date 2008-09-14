@@ -126,8 +126,8 @@ cf_t cf_new_convergent(cf_t x) {
   return res;
 }
 
-// Compute convergents of Mobius function applied to a nonregular
-// continued fraction.
+// Compute nonregular convergents of a Mobius function applied
+// to a nonregular continued fraction.
 static void *nonregular_mobius_convergent(cf_t cf) {
   mobius_data_ptr md = cf_data(cf);
   cf_t input = md->input;
@@ -302,6 +302,8 @@ cf_t cf_new_cf_to_decimal(cf_t x) {
   return res;
 }
 
+// This seems to be slower than regularizing the continued fraction
+// and then converting to decimal.
 static void *nonregular_mobius_decimal(cf_t cf) {
   mobius_data_ptr md = cf_data(cf);
   cf_t input = md->input;

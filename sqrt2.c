@@ -4,22 +4,14 @@
 #include "cf.h"
 
 static void *sqrt2(cf_t cf) {
-  mpz_t z;
-  mpz_init(z);
-  mpz_set_ui(z, 1);
-  if (!cf_wait(cf)) goto finish;
-  cf_put(cf, z);
-  mpz_set_ui(z, 2);
+  cf_put_int(cf, 1);
   while(cf_wait(cf)) {
-    cf_put(cf, z);
+    cf_put_int(cf, 2);
   }
-finish:
-  mpz_clear(z);
-  return NULL;
 }
 
 cf_t cf_new_sqrt2() {
-  return cf_new(sqrt2, NULL);
+  return cf_new_const(sqrt2);
 }
 
 int main() {

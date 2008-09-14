@@ -99,6 +99,14 @@ void cf_put(cf_t cf, mpz_t z) {
   pthread_mutex_unlock(&cf->chan_mu);
 }
 
+void cf_put_int(cf_t cf, int n) {
+  mpz_t z;
+  mpz_init(z);
+  mpz_set_si(z, n);
+  cf_put(cf, z);
+  mpz_clear(z);
+}
+
 void cf_get(mpz_t z, cf_t cf) {
   pthread_mutex_lock(&cf->chan_mu);
   if (!cf->chan) {

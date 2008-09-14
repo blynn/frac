@@ -5,26 +5,20 @@
 
 // e = [2; 1, 2, 1, 1, 4, 1, ...]
 static void *e_expansion(cf_t cf) {
-  mpz_t even, one;
-  mpz_init(even); mpz_init(one);
-  mpz_set_ui(even, 2); mpz_set_ui(one, 1);
-
-  cf_put(cf, even);
+  int even = 2;
+  cf_put_int(cf, even);
 
   while(cf_wait(cf)) {
-    cf_put(cf, one);
-    cf_put(cf, even);
-    mpz_add_ui(even, even, 2);
-    cf_put(cf, one);
+    cf_put_int(cf, 1);
+    cf_put_int(cf, even);
+    even += 2;
+    cf_put_int(cf, 1);
   }
-
-  mpz_clear(one);
-  mpz_clear(even);
   return NULL;
 }
 
 cf_t cf_new_e() {
-  return cf_new(e_expansion, NULL);
+  return cf_new_const(e_expansion);
 }
 
 // 4/pi = 1 + 1/(3 + 4/(5 + 9/(7 + 16/(9 + ...))))
@@ -70,28 +64,24 @@ static void *regularized_pi(cf_t cf) {
 }
 
 cf_t cf_new_pi() {
-  return cf_new(regularized_pi, NULL);
+  return cf_new_const(regularized_pi);
 }
 
 // tan 1 = [1; 1, 1, 3, 1, 5, ...] 
 static void *tan1_expansion(cf_t cf) {
-  mpz_t odd, one;
-  mpz_init(odd); mpz_init(one);
-  mpz_set_ui(odd, 1); mpz_set_ui(one, 1);
+  int odd = 1;
 
   while(cf_wait(cf)) {
-    cf_put(cf, one);
-    cf_put(cf, odd);
-    mpz_add_ui(odd, odd, 2);
+    cf_put_int(cf, 1);
+    cf_put_int(cf, odd);
+    odd += 2;
   }
 
-  mpz_clear(one);
-  mpz_clear(odd);
   return NULL;
 }
 
 cf_t cf_new_tan1() {
-  return cf_new(tan1_expansion, NULL);
+  return cf_new_const(tan1_expansion);
 }
 
 // exp(z) = 1 + z/(1 - z/(2 + z/(3 - z/(2 + z/(5 - z/(2 + z/ ...))))))

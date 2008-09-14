@@ -9,10 +9,14 @@ struct cf_s;
 typedef struct cf_s *cf_t;
 
 cf_t cf_new(void *(*func)(cf_t), void *data);
+static inline cf_t cf_new_const(void *(*func)(cf_t)) {
+  return cf_new(func, NULL);
+}
 void cf_free(cf_t cf);
 
 void cf_get(mpz_t z, cf_t cf);
 void cf_put(cf_t cf, mpz_t z);
+void cf_put_int(cf_t cf, int n);
 
 int cf_wait(cf_t cf);
 
