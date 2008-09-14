@@ -73,13 +73,12 @@ static void *e_expansion(cf_t cf) {
 }
 ..............................................................................
 
-So we only need to know about two functions when programming for this library:
-+cf_put+ places a term on the output channel, and +cf_wait+ is our
+The function +cf_put+ places a term on the output channel, and +cf_wait+ is our
 implementation of demand channels, a sort of cooperative multitasking.  Without
 it, not only would we have to destroy and clean up after the thread ourselves,
 but more seriously, the thread might consume vast amounts of resources on
 unwanted terms.  The +cf_wait+ functions instructs the thread to stay idle.
-Our threads call this function often, and if it it returns zero, our threads
+Our threads call this function often, and if it returns zero, our threads
 clean themselves up and exit.
 
 == Bugs and other issues ==

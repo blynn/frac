@@ -88,20 +88,18 @@ cf_t cf_new_tan1() {
 void *exp_expansion(cf_t cf) {
   mpz_ptr z = cf_data(cf);
   mpz_t minusz;
-  mpz_t odd, two;
-  mpz_init(odd); mpz_init(two); mpz_init(minusz);
-  mpz_set_ui(odd, 1);
-  mpz_set_ui(two, 2);
+  int odd = 1;
+  mpz_init(minusz);
   mpz_neg(minusz, z);
-  cf_put(cf, odd);
+  cf_put_int(cf, 1);
   while(cf_wait(cf)) {
     cf_put(cf, z);
-    cf_put(cf, odd);
-    mpz_add_ui(odd, odd, 2);
+    cf_put_int(cf, odd);
+    odd += 2;
     cf_put(cf, minusz);
-    cf_put(cf, two);
+    cf_put_int(cf, 2);
   }
-  mpz_clear(odd); mpz_clear(two); mpz_clear(minusz);
+  mpz_clear(minusz);
   mpz_clear(z);
   free(z);
   return NULL;
