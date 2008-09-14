@@ -1,0 +1,130 @@
+= Continued Fraction Library =
+
+Ben Lynn, September 2008
+
+== Introduction ==
+
+1/3 has no finite floating point representation.  How can a standard tool for
+working with real numbers be unable to handle a number a young child could
+understand?
+
+Enter continued fractions. Finite continued fractions uniquely (if you forbid
+the last term from being 1) and exactly represent rationals.  Contrast this
+with 1/3 = 0.333... and 1 = 0.999...  They live in a realm free from the
+tyranny of base 2. Commonly encountered irrational numbers, both algebraic and
+transcendental, are readily represented with infinite continued fractions, and
+when we truncate them we have an approximation along with an error bound. In
+contrast, floating point numbers must be accompanied at all times with their
+error bounds.
+
+Repeated digits in decimal representation occur for fractions, but why waste
+such an interesting phenomenon on something as mundane as a rational? With
+continued fractions, repeated terms occur only for square roots. Other infinite
+but patterned sequences represent other celebrated numbers, such as e and pi.
+
+As with floating point numbers, we truncate infinite continued fractions to compute on them. But unlike floating point numbers, when more precision is desired
+we can compute more terms without redoing any work. Imagine a real-time
+application where on a timer interrupt, all continued fractions simply output
+the last computed convergent. Under heavy system load, approximations are
+coarser but the show goes on.
+
+== Installation ==
+
+I use the GMP library for multi-precision arithmetic. Type
+ 
+ $ make
+
+to compile. The "pi" binary generates 5000 digits of pi using a continued
+fraction. It takes longer than I had hoped.
+
+There's no API documentation yet; see the source.
+
+== Demand channels ==
+
+Threads are the future, if not already the present. Once, single core CPUs grew
+faster at an astounding pace. But limits are being approached, and engineers
+are turning to multicore designs to surmount technical obstacles. Multicore
+systems are already commonplace, and as time passes, the number of cores per
+system will steadily march upward. Happily, this suits continued fractions.
+
+Inspired by Doug McIlroy's "Squinting at Power Series" (search for it), we
+spawn at least one thread per continued fraction, and also per operation on
+continued fractions. The threads communicate via crude demand channels, each
+providing a few output terms upon each request.
+
+This scheme allows us to quickly write code for generating continued
+fraction expansions or operating on them. For example, consider the code for
+generating 'e' = 2.71828...
+
+..............................................................................
+// e = [2; 1, 2, 1, 1, 4, 1, ...]
+static void *e_expansion(cf_t cf) {
+  mpz_t even, one;
+  mpz_init(even); mpz_init(one);
+  mpz_set_ui(even, 2); mpz_set_ui(one, 1);
+
+  cf_put(cf, even);
+
+  while(cf_wait(cf)) {
+    cf_put(cf, one);
+    cf_put(cf, even);
+    mpz_add_ui(even, even, 2);
+    cf_put(cf, one);
+  }
+
+  mpz_clear(one);
+  mpz_clear(even);
+  return NULL;
+}
+..............................................................................
+
+Most of the verbosity is due to GMP. I plan to support plain ints as well by
+automatically upgrading them, so the above would be:
+
+..............................................................................
+// e = [2; 1, 2, 1, 1, 4, 1, ...]
+static void *e_expansion(cf_t cf) {
+  int even = 2;
+  cf_put_int(cf, even);
+
+  while(cf_wait(cf)) {
+    cf_put_int(cf, 1);
+    cf_put_int(cf, even);
+    even += 2;
+    cf_put_int(cf, 1);
+  }
+
+  return NULL;
+}
+..............................................................................
+
+So we only need to know about two functions when programming for this library:
++cf_put+ places a term on the output channel, and +cf_wait+ is our
+implementation of demand channels, a sort of cooperative multitasking.  Without
+it, not only would we have to destroy and clean up after the thread ourselves,
+but more seriously, the thread might consume vast amounts of resources on
+unwanted terms.  The +cf_wait+ functions instructs the thread to stay idle.
+Our threads call this function often, and if it it returns zero, our threads
+clean themselves up and exit.
+
+== Bugs and other issues ==
+
+I intend to devote time to projects that operate on real numbers rather than
+study real numbers for its own sake. But perhaps then I'll find a perfect
+application for continued fractions, which will push me to fix deficiencies
+in this code.
+
+- The API could use serious cosmetic surgery.
+
+- I want to replace the condition variable with a semaphore to silence Helgrind
+  (whose documentation states that condition variables almost unconditionally
+  and invariably raise false alarms).
+
+- The Makefile is fragile and annoying to maintain.
+
+- The testing infrastructure needs upgrading.
+
+- I'd like a split function as described by McIlroy, though for continued
+  fractions a "tee"-like function is more apt: rather than spawning a thread
+  for each term held back, we spawn and watch over two threads on invocation to
+  service the two demand channels, storing all backlogged terms in one thread.

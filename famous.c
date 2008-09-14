@@ -27,6 +27,7 @@ cf_t cf_new_e() {
   return cf_new(e_expansion, NULL);
 }
 
+// 4/pi = 1 + 1/(3 + 4/(5 + 9/(7 + 16/(9 + ...))))
 static void *pi_arctan_sequence(cf_t cf) {
   mpz_t num, denom;
   mpz_init(num);
@@ -34,10 +35,8 @@ static void *pi_arctan_sequence(cf_t cf) {
 
   mpz_set_ui(denom, 1);
   cf_put(cf, denom);
-
   mpz_set_ui(num, 1);
   cf_put(cf, num);
-
   while(cf_wait(cf)) {
     mpz_add_ui(denom, denom, 2);
     cf_put(cf, denom);
@@ -74,6 +73,28 @@ cf_t cf_new_pi() {
   return cf_new(regularized_pi, NULL);
 }
 
+// tan 1 = [1; 1, 1, 3, 1, 5, ...] 
+static void *tan1_expansion(cf_t cf) {
+  mpz_t odd, one;
+  mpz_init(odd); mpz_init(one);
+  mpz_set_ui(odd, 1); mpz_set_ui(one, 1);
+
+  while(cf_wait(cf)) {
+    cf_put(cf, one);
+    cf_put(cf, odd);
+    mpz_add_ui(odd, odd, 2);
+  }
+
+  mpz_clear(one);
+  mpz_clear(odd);
+  return NULL;
+}
+
+cf_t cf_new_tan1() {
+  return cf_new(tan1_expansion, NULL);
+}
+
+// exp(z) = 1 + z/(1 - z/(2 + z/(3 - z/(2 + z/(5 - z/(2 + z/ ...))))))
 void *exp_expansion(cf_t cf) {
   mpz_ptr z = cf_data(cf);
   mpz_t minusz;
@@ -91,6 +112,51 @@ void *exp_expansion(cf_t cf) {
     cf_put(cf, two);
   }
   mpz_clear(odd); mpz_clear(two); mpz_clear(minusz);
+  mpz_clear(z);
+  free(z);
+  return NULL;
+}
+
+// tanh n = z/(1 + z^2/(3 + z^2/(5 + z^2/...)))
+static void *gauss_tanh_expansion(cf_t cf) {
+  mpz_ptr z = cf_data(cf);
+  mpz_t z2;
+  mpz_t odd;
+  mpz_init(odd); mpz_init(z2);
+  mpz_set_ui(odd, 1);
+  mpz_set_ui(z2, 0);
+  cf_put(cf, z2);
+  cf_put(cf, z);
+  mpz_mul(z2, z, z);
+  while(cf_wait(cf)) {
+    cf_put(cf, odd);
+    mpz_add_ui(odd, odd, 2);
+    cf_put(cf, z2);
+  }
+  mpz_clear(odd); mpz_clear(z2);
+  mpz_clear(z);
+  free(z);
+  return NULL;
+}
+
+// tan n = z/(1 - z^2/(3 - z^2/(5 - z^2/...)))
+static void *gauss_tan_expansion(cf_t cf) {
+  mpz_ptr z = cf_data(cf);
+  mpz_t z2;
+  mpz_t odd;
+  mpz_init(odd); mpz_init(z2);
+  mpz_set_ui(odd, 1);
+  mpz_set_ui(z2, 0);
+  cf_put(cf, z2);
+  cf_put(cf, z);
+  mpz_mul(z2, z, z);
+  mpz_neg(z2, z2);
+  while(cf_wait(cf)) {
+    cf_put(cf, odd);
+    mpz_add_ui(odd, odd, 2);
+    cf_put(cf, z2);
+  }
+  mpz_clear(odd); mpz_clear(z2);
   mpz_clear(z);
   free(z);
   return NULL;
@@ -146,4 +212,13 @@ cf_t cf_new_one_arg_nonreg(void *(*fun)(cf_t), mpz_t z) {
 
 cf_t cf_new_epow(mpz_t pow) {
   return cf_new_one_arg_nonreg(exp_expansion, pow);
+}
+
+cf_t cf_new_tanh(mpz_t z) {
+  return cf_new_one_arg_nonreg(gauss_tanh_expansion, z);
+}
+
+// TODO: Handle negative convergents so this function works.
+cf_t cf_new_tan(mpz_t z) {
+  return cf_new_one_arg_nonreg(gauss_tanh_expansion, z);
 }

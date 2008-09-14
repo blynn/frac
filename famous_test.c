@@ -27,7 +27,7 @@ int main() {
   cf_t pi;
   pi = cf_new_pi();
   conv = cf_new_cf_to_decimal(pi);
-  for (int i = 0; i <= 20; i++) {
+  for (int i = 0; i < 20; i++) {
     cf_get(z, conv);
     s[i] = mpz_get_ui(z) + '0';
   }
@@ -35,6 +35,18 @@ int main() {
   EXPECT(!strcmp(s, "31415926535897932384"));
   cf_free(conv);
   cf_free(pi);
+
+  cf_t tan1;
+  tan1 = cf_new_tan1();
+  conv = cf_new_cf_to_decimal(tan1);
+  for (int i = 0; i < 20; i++) {
+    cf_get(z, conv);
+    s[i] = mpz_get_ui(z) + '0';
+  }
+  s[20] = 0;
+  EXPECT(!strcmp(s, "15574077246549022305"));
+  cf_free(conv);
+  cf_free(tan1);
 
   e = cf_new_e();
   pi = cf_new_pi();

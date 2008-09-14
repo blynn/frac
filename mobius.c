@@ -1,3 +1,5 @@
+// TODO: Handle negative convergents
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <gmp.h>

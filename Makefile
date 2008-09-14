@@ -1,4 +1,4 @@
-CF_FILES:=cf.c cf_mobius.c cf_famous.c bihom.c
+CF_FILES:=cf.c mobius.c famous.c bihom.c
 
 target : pi pi2 sqrt2 epow
 
