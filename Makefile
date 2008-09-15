@@ -1,6 +1,6 @@
 CF_FILES:=cf.c mobius.c famous.c bihom.c
 
-target : pi pi2 sqrt2 epow
+target : pi pi2 sqrt2 epow taylor
 
 % : %.c $(CF_FILES)
 	#gcc -O3 -std=c99 -Wall -o $@ $^ -lgmp -lpthread
