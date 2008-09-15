@@ -125,8 +125,8 @@ static void *bihom(cf_t cf) {
       return 0;
     }
     mpz_fdiv_qr(qr->s0, qr->s1, p->s0, p->s1);
-    if (mpz_cmp(qr->q0, qr->q0)) {
-      move_down();
+    if (mpz_cmp(qr->s0, qr->r0)) {
+      move_down();  // Either way should work.
       return 0;
     }
     cf_put(cf, qr->p0);
