@@ -143,6 +143,10 @@ static void *bihom(cf_t cf) {
   pqrs_clear(qr);
   mpz_clear(z);
   mpz_clear(t0); mpz_clear(t1);
+  for (int i = 0; i < 8; i++) {
+    mpz_clear(bd->a[i]);
+  }
+  free(bd);
   return NULL;
 }
 
