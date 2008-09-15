@@ -69,6 +69,7 @@ void cf_free(cf_t cf) {
   channel_ptr c = cf->chan;
   while (c) {
     channel_ptr cnext = c->next;
+    mpz_clear(c->data);
     free(c->data);
     free(c);
     c = cnext;
