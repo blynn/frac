@@ -59,4 +59,8 @@ cf_t cf_new_tan(mpz_t z);
 // Gosper's method for computing bihomographic functions of continued fractions.
 cf_t cf_new_bihom(cf_t x, cf_t y, mpz_t a[8]);
 
+// From taylor.c:
+cf_t cf_new_sin1();
+cf_t cf_new_cos1();
+
 #endif  // __CF_H__

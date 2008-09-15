@@ -30,7 +30,9 @@ If only we had used continued fractions, for then we could arbitrarily
 increase the precision of our answer without redoing any work. Furthermore,
 the error analysis becomes trivial.
 
-However, we must pay a price for the advantages of continued fractions.  We
+== Disadvantages ==
+
+We must pay a price for the advantages of continued fractions.  We
 have a representation from which we can instantly infer error bounds. A
 representation for which we may arbitrarily increase precision without redoing
 any work. A representation which in some sense is the closest we can hope to
@@ -49,12 +51,14 @@ approximations are coarser but the show goes on.
 
 I use the GMP library for multi-precision arithmetic. Type
  
- $ make
+  $ make
 
-to compile. The "pi" binary generates 5000 digits of pi using a continued
-fraction. It takes longer than I had hoped.
+to compile. Try "pi 2000" to generate 2000 digits of pi using a continued
+fraction. It takes longer than I had hoped, but it's faster than
 
-There's no API documentation yet; see the source.
+  $ echo "scale = 2000; 4*a(1)" | bc -l
+
+There's no API documentation; see the source.
 
 == Demand channels ==
 
@@ -118,4 +122,4 @@ in this code.
 - I'd like a split function as described by McIlroy, though for continued
   fractions a "tee"-like function is more apt: rather than spawning a thread
   for each term held back, we spawn and watch over two threads on invocation to
-  service the two demand channels, storing all backlogged terms in one thread.
+  service the two demand channels, storing all backlogged terms in one place.
