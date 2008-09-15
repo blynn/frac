@@ -8,6 +8,7 @@ static void *sqrt2(cf_t cf) {
   while(cf_wait(cf)) {
     cf_put_int(cf, 2);
   }
+  return NULL;
 }
 
 cf_t cf_new_sqrt2() {

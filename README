@@ -1,5 +1,4 @@
 = Continued Fraction Library =
-
 Ben Lynn, September 2008
 
 == Introduction ==
@@ -22,11 +21,29 @@ such an interesting phenomenon on something as mundane as a rational? With
 continued fractions, repeated terms occur only for square roots. Other infinite
 but patterned sequences represent other celebrated numbers, such as e and pi.
 
-As with floating point numbers, we truncate infinite continued fractions to compute on them. But unlike floating point numbers, when more precision is desired
-we can compute more terms without redoing any work. Imagine a real-time
-application where on a timer interrupt, all continued fractions simply output
-the last computed convergent. Under heavy system load, approximations are
-coarser but the show goes on.
+Let's say we use floating-point to compute some answer to 100 decimal places.
+What if we now want 200 decimal places? Even if we possess the first 100
+digits, and carefully preserved the program state, we must start from scratch
+and redo all our arithmetic with 200 digit precision.
+
+If only we had used continued fractions, for then we could arbitrarily
+increase the precision of our answer without redoing any work. Furthermore,
+the error analysis becomes trivial.
+
+However, we must pay a price for the advantages of continued fractions.  We
+have a representation from which we can instantly infer error bounds. A
+representation for which we may arbitrarily increase precision without redoing
+any work. A representation which in some sense is the closest we can hope to
+get to an exact number. Is it any wonder therefore that binary operations,
+whose output must conform to this wondrous representation, are clumsy and
+convoluted, and that deriving continued fraction expansions for many
+reals is time-consuming?
+
+These drawbacks are almost certainly why continued fractions remain obscure.
+Yet surely there are some problems that scream for continued fractions?
+Imagine a real-time application where on a timer interrupt, all continued
+fractions simply output the last computed convergent.  Under heavy system load,
+approximations are coarser but the show goes on.
 
 == Installation ==
 
@@ -88,7 +105,7 @@ study real numbers for its own sake. But perhaps then I'll find a perfect
 application for continued fractions, which will push me to fix deficiencies
 in this code.
 
-- The API could use serious cosmetic surgery.
+- The API could use cosmetic surgery.
 
 - I want to replace the condition variable with a semaphore to silence Helgrind
   (whose documentation states that condition variables almost unconditionally

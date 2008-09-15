@@ -9,7 +9,7 @@ int main() {
   mpz_init(z);
   cf_t x, conv;
 
-  mpz_set_ui(z, 3);
+  mpz_set_si(z, 3);
   x = cf_new_tanh(z);
 
   printf("tanh 3 = ");

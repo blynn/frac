@@ -1,5 +1,3 @@
-// TODO: Handle negative convergents
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <gmp.h>
@@ -25,6 +23,13 @@ void pqset_clear(pqset_t pq) {
   mpz_clear(pq->qold);
   mpz_clear(pq->p);
   mpz_clear(pq->q);
+}
+
+void pqset_neg(pqset_t pq) {
+  mpz_neg(pq->p, pq->p);
+  mpz_neg(pq->q, pq->q);
+  mpz_neg(pq->pold, pq->pold);
+  mpz_neg(pq->qold, pq->qold);
 }
 
 void pqset_print(pqset_t pq) {
@@ -178,6 +183,7 @@ static void *mobius_nonregular_throughput(cf_t cf) {
   int recur() {
     pqset_nonregular_recur(pq, num, denom);
     pqset_remove_gcd(pq, t0, t1);
+
     if (mpz_sgn(pq->qold)) {
       mpz_fdiv_qr(t1, t0, pq->pold, pq->qold);
       mpz_mul(t2, t1, pq->q);

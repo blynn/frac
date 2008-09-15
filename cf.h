@@ -50,6 +50,12 @@ cf_t cf_new_tan1();
 cf_t cf_new_epow(mpz_t pow);
 cf_t cf_new_tanh(mpz_t z);
 
+// This won't work because my code cannot handle negative denominators,
+// and also assumes the sequence of convergents alternatively overshoot
+// and undershoots the target. The tan expansion leads to a sequence of
+// strictly increasing convergents (for positive input).
+cf_t cf_new_tan(mpz_t z);
+
 // Gosper's method for computing bihomographic functions of continued fractions.
 cf_t cf_new_bihom(cf_t x, cf_t y, mpz_t a[8]);
 

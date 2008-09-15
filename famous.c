@@ -206,7 +206,6 @@ cf_t cf_new_tanh(mpz_t z) {
   return cf_new_one_arg_nonreg(gauss_tanh_expansion, z);
 }
 
-// TODO: Handle negative convergents so this function works.
 cf_t cf_new_tan(mpz_t z) {
-  return cf_new_one_arg_nonreg(gauss_tanh_expansion, z);
+  return cf_new_one_arg_nonreg(gauss_tan_expansion, z);
 }
