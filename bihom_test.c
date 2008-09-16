@@ -22,7 +22,7 @@ int main() {
 
   cf_t b = cf_new_bihom(e, pi, addarray);
 
-  CF_EXPECT_DEC(b, "58598744820488384738");
+  CF_EXPECT_DEC(b, "5.8598744820488384738");
 
   cf_free(b);
   cf_free(e);
@@ -38,11 +38,26 @@ int main() {
   mpz_set_si(addarray[7], 1);
   b = cf_new_bihom(s1, c1, addarray);
 
-  CF_EXPECT_DEC(b, "09092974268256816953");
+  CF_EXPECT_DEC(b, "0.9092974268256816953");
 
   cf_free(b);
   cf_free(c1);
   cf_free(s1);
+
+  // Check 2 (cos 1)^2 - 1 = cos 2 =
+  s1 = cf_new_cos1();  // TODO: Implement tee, use that instead.
+  c1 = cf_new_cos1();
+  mpz_set_si(addarray[0], 2);
+  mpz_set_si(addarray[3], -1);
+  mpz_set_si(addarray[7], 1);
+  b = cf_new_bihom(s1, c1, addarray);
+
+  CF_EXPECT_DEC(b, "-0.41614683654714238699");
+
+  cf_free(b);
+  cf_free(c1);
+  cf_free(s1);
+
   for (int i = 0; i < 8; i++) {
     mpz_clear(addarray[i]);
   }

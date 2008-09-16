@@ -10,11 +10,28 @@ void cf_expect_dec(cf_t x, char *result, char *filename, int line) {
   cf_t conv;
   conv = cf_new_cf_to_decimal(x);
   int len = strlen(result);
+
   char s[len + 1];
-  for (int i = 0; i <= len; i++) {
+  cf_get(z, conv);
+  int i = 0;
+  if (cf_sign(conv) < 0) {
+    s[i] = '-';
+    i++;
+  }
+  if (i >= len) goto testit;
+  i += gmp_snprintf(s + i, len - i + 1, "%Zd", z);
+  if (i >= len) goto testit;
+  s[i] = '.';
+  i++;
+  if (i >= len) goto testit;
+
+  while (i < len) {
     cf_get(z, conv);
     s[i] = mpz_get_ui(z) + '0';
+    i++;
   }
+
+testit:
   s[len] = 0;
   if (strcmp(s, result)) {
     fprintf(stderr, "\n%s:%d: bad continued fraction decimal expansion\n",

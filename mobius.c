@@ -242,6 +242,7 @@ static void *mobius_decimal(cf_t cf) {
   mpz_t t0, t1, t2; mpz_init(t2); mpz_init(t1); mpz_init(t0);
 
   // Determine the sign.
+  cf_set_sign(cf, cf_sign(input));
   while (mpz_sgn(pq->pold) != mpz_sgn(pq->p)
       || mpz_sgn(pq->qold) != mpz_sgn(pq->q)) {
     cf_get(denom, input);

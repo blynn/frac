@@ -90,6 +90,30 @@ static void *bihom(cf_t cf) {
     mpz_set(p->r0, p->p0);  mpz_set(p->r1, p->p1);
     mpz_set(p->p0, t0);     mpz_set(p->p1, t1);
   }
+  // Determine sign.
+  while (mpz_sgn(p->p1) != mpz_sgn(p->q1)
+      || mpz_sgn(p->q1) != mpz_sgn(p->r1)
+      || mpz_sgn(p->r1) != mpz_sgn(p->s1)
+      || mpz_sgn(p->p0) != mpz_sgn(p->q0)
+      || mpz_sgn(p->q0) != mpz_sgn(p->r0)
+      || mpz_sgn(p->r0) != mpz_sgn(p->s0)) {
+    move_right();
+    move_down();
+  }
+  if (mpz_sgn(p->p0) < 0) {
+    mpz_neg(p->p0, p->p0);
+    mpz_neg(p->q0, p->q0);
+    mpz_neg(p->r0, p->r0);
+    mpz_neg(p->s0, p->s0);
+    cf_flip_sign(cf);
+  }
+  if (mpz_sgn(p->p1) < 0) {
+    mpz_neg(p->p1, p->p1);
+    mpz_neg(p->q1, p->q1);
+    mpz_neg(p->r1, p->r1);
+    mpz_neg(p->s1, p->s1);
+    cf_flip_sign(cf);
+  }
 
   int recur() {
     if (!mpz_sgn(p->s1)) {

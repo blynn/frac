@@ -44,6 +44,10 @@ void *cf_data(cf_t cf) {
   return cf->data;
 }
 
+void cf_set_sign(cf_t cf, int sign) {
+  cf->sign = sign;
+}
+
 int cf_sign(cf_t cf) {
   return cf->sign;
 }
