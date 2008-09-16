@@ -3,6 +3,19 @@
 #include <gmp.h>
 #include "cf.h"
 
+// sqrt(2) = [1; 2, 2, ...]
+static void *sqrt2(cf_t cf) {
+  cf_put_int(cf, 1);
+  while(cf_wait(cf)) {
+    cf_put_int(cf, 2);
+  }
+  return NULL;
+}
+
+cf_t cf_new_sqrt2() {
+  return cf_new_const(sqrt2);
+}
+
 // e = [2; 1, 2, 1, 1, 4, 1, ...]
 static void *e_expansion(cf_t cf) {
   int even = 2;

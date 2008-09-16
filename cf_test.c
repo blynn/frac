@@ -22,7 +22,7 @@ int main() {
   mpz_t z;
   mpz_init(z);
   cf_t a;
-  a = cf_new(count_fn, NULL);
+  a = cf_new_const(count_fn);
   for (int i = 0; i < 100; i++) {
     cf_get(z, a);
     EXPECT(!mpz_cmp_ui(z, i));

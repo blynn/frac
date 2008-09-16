@@ -122,7 +122,7 @@ cf_t cf_new_mobius_convergent(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
 
 // Start a thread that, when signalled, computes the convergents of a continued
 // fraction.
-cf_t cf_new_convergent(cf_t x) {
+cf_t cf_new_cf_convergent(cf_t x) {
   mpz_t one, zero;
   mpz_init(one); mpz_init(zero);
   mpz_set_ui(one, 1); mpz_set_ui(zero, 0);
@@ -173,6 +173,8 @@ cf_t cf_new_nonregular_mobius_convergent(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_
   return cf_new(nonregular_mobius_convergent, md);
 }
 
+// Input: Mobius transformation and nonregular continued fraction.
+// Output: Regular continued fraction. Assumes input fraction is well-behaved.
 static void *mobius_nonregular_throughput(cf_t cf) {
   mobius_data_ptr md = cf_data(cf);
   cf_t input = md->input;
@@ -234,99 +236,6 @@ cf_t cf_new_nonregular_to_cf(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
   return cf_new(mobius_nonregular_throughput, md);
 }
 
-static void *mobius_decimal(cf_t cf) {
-  mobius_data_ptr md = cf_data(cf);
-  cf_t input = md->input;
-  pqset_t pq; pqset_init(pq); pqset_set_mobius(pq, md);
-  mpz_t denom; mpz_init(denom);
-  mpz_t t0, t1, t2; mpz_init(t2); mpz_init(t1); mpz_init(t0);
-
-  // Determine the sign.
-  cf_set_sign(cf, cf_sign(input));
-  while (mpz_sgn(pq->pold) != mpz_sgn(pq->p)
-      || mpz_sgn(pq->qold) != mpz_sgn(pq->q)) {
-    cf_get(denom, input);
-    pqset_regular_recur(pq, denom);
-  }
-  if (mpz_sgn(pq->qold) < 0) {
-    mpz_neg(pq->qold, pq->qold);
-    mpz_neg(pq->q, pq->q);
-    cf_flip_sign(cf);
-  }
-  if (mpz_sgn(pq->pold) < 0) {
-    mpz_neg(pq->pold, pq->pold);
-    mpz_neg(pq->p, pq->p);
-    cf_flip_sign(cf);
-  }
-
-  int recur() {
-    pqset_regular_recur(pq, denom);
-
-    // If the denominator is zero, we can't do anything yet.
-    if (mpz_sgn(pq->qold)) {
-      // Each term except possibly the first is one of {0, ..., 9}.
-      /* Naive attempt to expoit this didn't seem faster:
-       * (and I'd have to handle the first term properly)
-      int i;
-      mpz_set(t0, pq->q);
-      for (i = 0; i <= 9; i++) {
-	if (mpz_cmp(t0, pq->p) > 0) break;
-	mpz_add(t0, t0, pq->q);
-      }
-      mpz_set_ui(pq->pold, i);
-      mpz_sub(t0, t0, pq->p);
-      mpz_sub(t0, pq->q, t0);
-      mpz_mul(pq->qold, pq->pold, pq->qnew);
-      */
-
-      mpz_fdiv_qr(t1, t0, pq->pold, pq->qold);
-      mpz_mul(t2, t1, pq->q);
-      if (mpz_cmp(t2, pq->p) <= 0) {
-	mpz_add(t2, t2, pq->q);
-	if (mpz_cmp(t2, pq->p) > 0) {
-	  // Output a decimal digit.
-	  cf_put(cf, t1);
-	  // Compute t2 = remainder of p/q.
-	  mpz_sub(t2, t2, pq->p);
-	  mpz_sub(t2, pq->q, t2);
-	  // Multiply numerator by 10.
-	  mpz_mul_ui(pq->pold, t0, 10);
-	  mpz_mul_ui(pq->p, t2, 10);
-	  return 1;
-	}
-      }
-    }
-    return 0;
-  }
-  while(cf_wait(cf)) {
-    do {
-      cf_get(denom, input);
-    } while(!recur());
-  }
-  mpz_clear(denom);
-  pqset_clear(pq);
-  mpz_clear(t0); mpz_clear(t1); mpz_clear(t2);
-  mpz_clear(md->a); mpz_clear(md->b); mpz_clear(md->c); mpz_clear(md->d);
-  free(md);
-  return NULL;
-}
-cf_t cf_new_mobius_to_decimal(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
-  mobius_data_ptr md = malloc(sizeof(*md));
-  mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
-  mpz_set(md->a, a); mpz_set(md->b, b); mpz_set(md->c, c); mpz_set(md->d, d);
-  md->input = x;
-  return cf_new(mobius_decimal, md);
-}
-
-cf_t cf_new_cf_to_decimal(cf_t x) {
-  mpz_t one, zero;
-  mpz_init(one); mpz_init(zero);
-  mpz_set_ui(one, 1); mpz_set_ui(zero, 0);
-  cf_t res = cf_new_mobius_to_decimal(x, one, zero, zero, one);
-  mpz_clear(one); mpz_clear(zero);
-  return res;
-}
-
 // This seems to be slower than regularizing the continued fraction
 // and then converting to decimal.
 static void *nonregular_mobius_decimal(cf_t cf) {
@@ -385,4 +294,162 @@ cf_t cf_new_nonregular_mobius_to_decimal(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_
   mpz_set(md->a, a); mpz_set(md->b, b); mpz_set(md->c, c); mpz_set(md->d, d);
   md->input = x;
   return cf_new(nonregular_mobius_decimal, md);
+}
+
+static void determine_sign(cf_t cf, pqset_t pq, mpz_t denom, cf_t input) {
+  cf_set_sign(cf, cf_sign(input));
+  while (mpz_sgn(pq->pold) != mpz_sgn(pq->p)
+      || mpz_sgn(pq->qold) != mpz_sgn(pq->q)) {
+    cf_get(denom, input);
+    pqset_regular_recur(pq, denom);
+  }
+  if (mpz_sgn(pq->qold) < 0) {
+    mpz_neg(pq->qold, pq->qold);
+    mpz_neg(pq->q, pq->q);
+    cf_flip_sign(cf);
+  }
+  if (mpz_sgn(pq->pold) < 0) {
+    mpz_neg(pq->pold, pq->pold);
+    mpz_neg(pq->p, pq->p);
+    cf_flip_sign(cf);
+  }
+}
+
+// Input: Mobius transformation and regular continued fraction.
+// Output: Regular continued fraction.
+static void *mobius_throughput(cf_t cf) {
+  mobius_data_ptr md = cf_data(cf);
+  cf_t input = md->input;
+  pqset_t pq; pqset_init(pq); pqset_set_mobius(pq, md);
+  mpz_t denom; mpz_init(denom);
+  mpz_t t0, t1, t2; mpz_init(t2); mpz_init(t1); mpz_init(t0);
+
+  determine_sign(cf, pq, denom, input);
+
+  int recur() {
+    pqset_regular_recur(pq, denom);
+
+    if (mpz_sgn(pq->qold)) {
+      mpz_fdiv_qr(t1, t0, pq->pold, pq->qold);
+      mpz_mul(t2, t1, pq->q);
+
+      if (mpz_cmp(t2, pq->p) <= 0) {
+	mpz_add(t2, t2, pq->q);
+	if (mpz_cmp(t2, pq->p) > 0) {
+	  // Output continued fraction term.
+	  cf_put(cf, t1);
+	  // Subtract: remainder of p/q.
+	  mpz_sub(t2, t2, pq->p);
+	  mpz_sub(t2, pq->q, t2);
+	  // Invert
+	  mpz_set(pq->pold, pq->qold);
+	  mpz_set(pq->qold, t0);
+	  mpz_set(pq->p, pq->q);
+	  mpz_set(pq->q, t2);
+	  return 1;
+	}
+      }
+    }
+    return 0;
+  }
+  while(cf_wait(cf)) {
+    do {
+      cf_get(denom, input);
+    } while(!recur());
+  }
+  mpz_clear(denom);
+  pqset_clear(pq);
+  mpz_clear(t0); mpz_clear(t1); mpz_clear(t2);
+  mpz_clear(md->a); mpz_clear(md->b); mpz_clear(md->c); mpz_clear(md->d);
+  free(md);
+  return NULL;
+}
+
+cf_t cf_new_mobius_to_cf(cf_t x, mpz_t z[4]) {
+  mobius_data_ptr md = malloc(sizeof(*md));
+  mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
+  mpz_set(md->a, z[0]); mpz_set(md->b, z[1]);
+  mpz_set(md->c, z[2]); mpz_set(md->d, z[3]);
+  md->input = x;
+  return cf_new(mobius_throughput, md);
+}
+
+// Input: Mobius transformation and regular continued fraction.
+// Output: Decimal representation. The integer part is given first,
+// followed by one digit at a time.
+static void *mobius_decimal(cf_t cf) {
+  mobius_data_ptr md = cf_data(cf);
+  cf_t input = md->input;
+  pqset_t pq; pqset_init(pq); pqset_set_mobius(pq, md);
+  mpz_t denom; mpz_init(denom);
+  mpz_t t0, t1, t2; mpz_init(t2); mpz_init(t1); mpz_init(t0);
+
+  determine_sign(cf, pq, denom, input);
+  int recur() {
+    pqset_regular_recur(pq, denom);
+
+    // If the denominator is zero, we can't do anything yet.
+    if (mpz_sgn(pq->qold)) {
+      // Each term except possibly the first is one of {0, ..., 9}.
+      /* Naive attempt to expoit this didn't seem faster:
+       * (and I'd have to handle the first term properly)
+      int i;
+      mpz_set(t0, pq->q);
+      for (i = 0; i <= 9; i++) {
+	if (mpz_cmp(t0, pq->p) > 0) break;
+	mpz_add(t0, t0, pq->q);
+      }
+      mpz_set_ui(pq->pold, i);
+      mpz_sub(t0, t0, pq->p);
+      mpz_sub(t0, pq->q, t0);
+      mpz_mul(pq->qold, pq->pold, pq->qnew);
+      */
+
+      mpz_fdiv_qr(t1, t0, pq->pold, pq->qold);
+      mpz_mul(t2, t1, pq->q);
+      if (mpz_cmp(t2, pq->p) <= 0) {
+	mpz_add(t2, t2, pq->q);
+	if (mpz_cmp(t2, pq->p) > 0) {
+	  // Output a decimal digit.
+	  cf_put(cf, t1);
+	  // Compute t2 = remainder of p/q.
+	  mpz_sub(t2, t2, pq->p);
+	  mpz_sub(t2, pq->q, t2);
+	  // Multiply numerator by 10.
+	  mpz_mul_ui(pq->pold, t0, 10);
+	  mpz_mul_ui(pq->p, t2, 10);
+	  return 1;
+	}
+      }
+    }
+    return 0;
+  }
+  while(cf_wait(cf)) {
+    do {
+      cf_get(denom, input);
+    } while(!recur());
+  }
+  mpz_clear(denom);
+  pqset_clear(pq);
+  mpz_clear(t0); mpz_clear(t1); mpz_clear(t2);
+  mpz_clear(md->a); mpz_clear(md->b); mpz_clear(md->c); mpz_clear(md->d);
+  free(md);
+  return NULL;
+}
+
+cf_t cf_new_mobius_to_decimal(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
+  mobius_data_ptr md = malloc(sizeof(*md));
+  mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
+  mpz_set(md->a, a); mpz_set(md->b, b); mpz_set(md->c, c); mpz_set(md->d, d);
+  md->input = x;
+  return cf_new(mobius_decimal, md);
+}
+
+cf_t cf_new_cf_to_decimal(cf_t x) {
+  mpz_t one, zero;
+  mpz_init(one); mpz_init(zero);
+  mpz_set_ui(one, 1); mpz_set_ui(zero, 0);
+  cf_t res = cf_new_mobius_to_decimal(x, one, zero, zero, one);
+  mpz_clear(one); mpz_clear(zero);
+  return res;
 }

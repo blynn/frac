@@ -1,13 +1,22 @@
-CF_FILES:=cf.c mobius.c famous.c bihom.c taylor.c
-TEST_FILES:=$(CF_FILES) test.c
+.PHONY: test target clean
 
-target : pi pi2 sqrt2 epow
+CF_OBJS:=cf.o mobius.o famous.o bihom.o taylor.o test.o
+TESTS:=bihom_test cf_test famous_test mobius_test
+BINS:=pi pi2 sqrt2 epow
 
-% : %.c $(CF_FILES)
-	#gcc -O3 -std=c99 -Wall -o $@ $^ -lgmp -lpthread
-	gcc -g -std=c99 -Wall -o $@ $^ -lgmp -lpthread
+target : $(BINS)
 
-test :
-	gcc -g -std=c99 -Wall -o cf_test cf_test.c $(TEST_FILES) -lgmp -lpthread
-	gcc -g -std=c99 -Wall -o famous_test famous_test.c $(TEST_FILES) -lgmp -lpthread
-	gcc -g -std=c99 -Wall -o bihom_test bihom_test.c $(TEST_FILES) -lgmp -lpthread
+libfrac.a : $(CF_OBJS)
+	ar rvs $@ $^
+
+%.o : %.c
+	gcc -g -std=c99 -Wall -c -o $@ $<
+
+% : %.c libfrac.a
+	#gcc -O3 -std=c99 -Wall -o $@ $< -lgmp -lpthread -lfrac -L .
+	gcc -g -std=c99 -Wall -o $@ $< -lgmp -lpthread -lfrac -L .
+
+test: $(TESTS)
+
+clean:
+	-rm *.o $(TESTS) $(BINS) libfrac.a
