@@ -90,6 +90,7 @@ static void *bihom(cf_t cf) {
     mpz_set(p->r0, p->p0);  mpz_set(p->r1, p->p1);
     mpz_set(p->p0, t0);     mpz_set(p->p1, t1);
   }
+
   int recur() {
     if (!mpz_sgn(p->s1)) {
       move_right();

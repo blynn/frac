@@ -240,13 +240,32 @@ static void *mobius_decimal(cf_t cf) {
   pqset_t pq; pqset_init(pq); pqset_set_mobius(pq, md);
   mpz_t denom; mpz_init(denom);
   mpz_t t0, t1, t2; mpz_init(t2); mpz_init(t1); mpz_init(t0);
+
+  // Determine the sign.
+  while (mpz_sgn(pq->pold) != mpz_sgn(pq->p)
+      || mpz_sgn(pq->qold) != mpz_sgn(pq->q)) {
+    cf_get(denom, input);
+    pqset_regular_recur(pq, denom);
+  }
+  if (mpz_sgn(pq->qold) < 0) {
+    mpz_neg(pq->qold, pq->qold);
+    mpz_neg(pq->q, pq->q);
+    cf_flip_sign(cf);
+  }
+  if (mpz_sgn(pq->pold) < 0) {
+    mpz_neg(pq->pold, pq->pold);
+    mpz_neg(pq->p, pq->p);
+    cf_flip_sign(cf);
+  }
+
   int recur() {
     pqset_regular_recur(pq, denom);
 
     // If the denominator is zero, we can't do anything yet.
     if (mpz_sgn(pq->qold)) {
-      // The answer is one of {0, ..., 9}.
-      /* Naive attempt to expoit this didn't work well:
+      // Each term except possibly the first is one of {0, ..., 9}.
+      /* Naive attempt to expoit this didn't seem faster:
+       * (and I'd have to handle the first term properly)
       int i;
       mpz_set(t0, pq->q);
       for (i = 0; i <= 9; i++) {
@@ -278,7 +297,6 @@ static void *mobius_decimal(cf_t cf) {
     }
     return 0;
   }
-
   while(cf_wait(cf)) {
     do {
       cf_get(denom, input);

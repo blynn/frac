@@ -14,6 +14,8 @@ static inline cf_t cf_new_const(void *(*func)(cf_t)) {
 }
 void cf_free(cf_t cf);
 
+int cf_sign(cf_t cf);
+int cf_flip_sign(cf_t cf);
 void cf_get(mpz_t z, cf_t cf);
 void cf_put(cf_t cf, mpz_t z);
 void cf_put_int(cf_t cf, int n);

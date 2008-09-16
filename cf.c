@@ -28,6 +28,12 @@ struct cf_s {
   pthread_mutex_t chan_mu;
   channel_ptr chan, next;
 
+  // We break the CSP model slightly here: the sign of the continued
+  // fraction is read directly from a variable, not over channels.
+  // Only 'thread' may write to 'sign', and it should do so before the first
+  // cf_put(). Other threads should only read it after they have
+  // called cf_get() at least once.
+  int sign;
   int quitflag;
   void *data;
 };
@@ -36,6 +42,14 @@ typedef struct cf_s *cf_t;
 
 void *cf_data(cf_t cf) {
   return cf->data;
+}
+
+int cf_sign(cf_t cf) {
+  return cf->sign;
+}
+
+int cf_flip_sign(cf_t cf) {
+  return cf->sign = -cf->sign;
 }
 
 // A bit like cooperative multitasking. Continued fractions are expected
@@ -127,6 +141,7 @@ void cf_get(mpz_t z, cf_t cf) {
 
 cf_t cf_new(void *(*func)(cf_t), void *data) {
   cf_t cf = malloc(sizeof(*cf));
+  cf->sign = 1;
   cf->chan = NULL;
   cf->next = NULL;
   cf->quitflag = 0;

@@ -9,7 +9,8 @@ int main(int argc, char **argv) {
   mpz_init(z);
   cf_t pi, conv;
   pi = cf_new_pi();
-  int n = 1000;
+  int n = 2037 + 1;  // To outdo Metropolis, Reitwieser and von Neumann's
+                     // 1949 ENIAC record.
   if (argc > 1) {
     n = atoi(argv[1]);
     if (n <= 0) n = 100;

@@ -1,7 +1,9 @@
 = Continued Fraction Library =
 Ben Lynn, September 2008
 
-== Introduction ==
+Frac is a C library for computing with continued fractions.
+
+== Continued Fractions ==
 
 1/3 has no finite floating point representation.  How can a standard tool for
 working with real numbers be unable to handle a number a young child could
@@ -30,8 +32,6 @@ If only we had used continued fractions, for then we could arbitrarily
 increase the precision of our answer without redoing any work. Furthermore,
 the error analysis becomes trivial.
 
-== Disadvantages ==
-
 We must pay a price for the advantages of continued fractions.  We
 have a representation from which we can instantly infer error bounds. A
 representation for which we may arbitrarily increase precision without redoing
@@ -41,11 +41,13 @@ whose output must conform to this wondrous representation, are clumsy and
 convoluted, and that deriving continued fraction expansions for many
 reals is time-consuming?
 
-These drawbacks are almost certainly why continued fractions remain obscure.
-Yet surely there are some problems that scream for continued fractions?
-Imagine a real-time application where on a timer interrupt, all continued
-fractions simply output the last computed convergent.  Under heavy system load,
-approximations are coarser but the show goes on.
+These drawbacks are almost certainly why these fascinating creatures remain
+obscure.  Yet surely there are some problems that scream for continued
+fractions?  How about a screen saver that computes more and more digits of pi,
+each time picking up where it left off?  Or imagine a real-time application
+where all continued fractions simply output the last computed convergent on a
+timer interrupt.  Under heavy system load, approximations are coarser but the
+show goes on.
 
 == Installation ==
 
@@ -123,3 +125,17 @@ in this code.
   fractions a "tee"-like function is more apt: rather than spawning a thread
   for each term held back, we spawn and watch over two threads on invocation to
   service the two demand channels, storing all backlogged terms in one place.
+
+=== Increasing floating-point precision ===
+
+A disclaimer to some of my anti-floating-point rhetoric: increasing the
+precision of floating-point operations without redoing work is in fact possible
+for many common cases. For example, Newton's method is self-correcting, meaning
+we may use low precision at first, and increase it for future iterations.
+Even pi enjoys such methods: there is a formula computing any hexadecimal
+digit of pi without computing any previous digits, though it requires about the
+same amount of work.
+
+However, I'd prefer continued fractions to Newton's method when writing code
+to compute digits of, say, sqrt(2). Precision decisions are made automatically:
+one simply needs enough bits to hold the last computed convergents.

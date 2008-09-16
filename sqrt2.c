@@ -30,6 +30,24 @@ int main() {
   }
   cf_free(conv);
   cf_free(x);
+
+  x = cf_new_sqrt2();
+  mpz_t a, b, c, d;
+  mpz_init(a); mpz_init(b); mpz_init(c); mpz_init(d);
+  mpz_set_si(a, -7);
+  mpz_set_si(b, 5);
+  mpz_set_si(c, -12);
+  mpz_set_si(d, 13);
+  cf_t dec = cf_new_mobius_to_decimal(x, a, b, c, d);
+  cf_get(p, dec);
+  putchar(cf_sign(dec) > 0 ? ' ' : '-');
+  gmp_printf("%Zd.", p);
+  for (int i = 0; i < 10; i++) {
+    cf_get(p, dec);
+    gmp_printf("%Zd", p);
+  }
+  putchar('\n');
+  cf_free(x);
   mpz_clear(p);
   mpz_clear(q);
   return 0;
