@@ -47,7 +47,7 @@ cf_t cf_new_nonregular_mobius_convergent(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_
 // Output: Regular continued fraction. Assumes input fraction is well-behaved.
 cf_t cf_new_nonregular_to_cf(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d);
 // Does both of the above at once. Seems slow.
-cf_t cf_new_nonregular_mobius_to_decimal(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d);
+cf_t cf_new_nonregular_mobius_to_decimal(cf_t x, mpz_t a[4]);
 
 // Well-known continued fraction expansions.
 // cf_famous.c:
@@ -78,6 +78,7 @@ cf_t cf_new_cos1();
 //     a0 xy + a1 x + a2 y + a3
 // y = ------------------------
 //     a4 xy - a0 x + a5 y - a2
-cf_t cf_new_newton(cf_t x, mpz_t a[6]);
+cf_t cf_new_newton(cf_t x, mpz_t a[6], mpz_t lower);
+cf_t cf_new_sqrt(cf_t x);
 
 #endif  // __CF_H__

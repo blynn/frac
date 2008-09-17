@@ -126,15 +126,19 @@ in this code.
   for each term held back, we spawn and watch over two threads on invocation to
   service the two demand channels, storing all backlogged terms in one place.
 
-=== Increasing floating-point precision ===
+=== Disclaimer ===
 
-A disclaimer to some of my anti-floating-point rhetoric: increasing the
-precision of floating-point operations without redoing work is in fact possible
-for many common cases. For example, Newton's method is self-correcting, meaning
-we may use low precision at first, and increase it for future iterations.
-Even pi enjoys such methods: there is a formula computing any hexadecimal
-digit of pi without computing any previous digits, though it requires about the
-same amount of work.
+Let me put my salesmanship on hold, and temper my anti-floating-point rhetoric.
+Increasing the precision of floating-point operations without redoing work is
+in fact possible for many common cases. For example, Newton's method is
+self-correcting, meaning we may use low precision at first, and increase it for
+future iterations.  Even pi enjoys such methods: there is a formula computing
+any hexadecimal digit of pi without computing any previous digits, though it
+requires about the same amount of work.
+
+Also, Newton's method, and other floating-point algorithms converge
+quadratically or faster, thus a good implementation will asymptotically
+outperform continued fractions as these converge only linearly.
 
 However, I'd prefer continued fractions to Newton's method when writing code
 to compute digits of, say, sqrt(2). Precision decisions are made automatically:

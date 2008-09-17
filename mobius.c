@@ -257,7 +257,7 @@ static void *nonregular_mobius_decimal(cf_t cf) {
 	mpz_add(t2, t2, pq->q);
 	if (mpz_cmp(t2, pq->p) > 0) {
 	  // Output a decimal digit.
-	  cf_put(cf, pq->p);
+	  cf_put(cf, t1);
 	  // Subtract: remainder of p/q.
 	  mpz_sub(t2, t2, pq->p);
 	  mpz_sub(t2, pq->q, t2);
@@ -288,10 +288,11 @@ static void *nonregular_mobius_decimal(cf_t cf) {
   return NULL;
 }
 
-cf_t cf_new_nonregular_mobius_to_decimal(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d) {
+cf_t cf_new_nonregular_mobius_to_decimal(cf_t x, mpz_t a[4]) {
   mobius_data_ptr md = malloc(sizeof(*md));
   mpz_init(md->a); mpz_init(md->b); mpz_init(md->c); mpz_init(md->d);
-  mpz_set(md->a, a); mpz_set(md->b, b); mpz_set(md->c, c); mpz_set(md->d, d);
+  mpz_set(md->a, a[0]); mpz_set(md->b, a[1]);
+  mpz_set(md->c, a[2]); mpz_set(md->d, a[3]);
   md->input = x;
   return cf_new(nonregular_mobius_decimal, md);
 }
