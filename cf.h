@@ -72,4 +72,12 @@ cf_t cf_new_bihom(cf_t x, cf_t y, mpz_t a[8]);
 cf_t cf_new_sin1();
 cf_t cf_new_cos1();
 
+// From newton.c:
+// Use Newton's method to find solutions of:
+//
+//     a0 xy + a1 x + a2 y + a3
+// y = ------------------------
+//     a4 xy - a0 x + a5 y - a2
+cf_t cf_new_newton(cf_t x, mpz_t a[6]);
+
 #endif  // __CF_H__
