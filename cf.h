@@ -26,7 +26,7 @@ int cf_wait(cf_t cf);
 void *cf_data(cf_t cf);
 
 void cf_signal(cf_t cf); // For tee.
-void cf_waitspecial(cf_t cf);
+void cf_wait_special(cf_t cf);
 
 // From cf_tee.c:
 //

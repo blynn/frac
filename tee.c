@@ -34,7 +34,7 @@ struct parent_data_s {
 typedef struct parent_data_s parent_data_t[1];
 typedef struct parent_data_s *parent_data_ptr;
 
-// TODO: Destroy after children are destroyed.
+// TODO: Join after destruction.
 static void *parent_loop(cf_t cf) {
   struct backlog_s {
     mpz_t z;

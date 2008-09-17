@@ -34,19 +34,21 @@ int main() {
   
   // Confirm sqrt(1-(sin 1)^2) = cos 1
   x = cf_new_sin1();
-  y = cf_new_sin1();  // TODO: Use tee here.
+  cf_t s1[2];
+  cf_tee(s1, x);
   mpz_t b[8];
   for (i = 0; i < 8; i++) mpz_init(b[i]);
   mpz_set_si(b[0], -1);
   mpz_set_si(b[3], 1);
   mpz_set_si(b[7], 1);
 
-  cf_t bi = cf_new_bihom(x, y, b);
+  cf_t bi = cf_new_bihom(s1[0], s1[1], b);
   cf_t n = cf_new_sqrt(bi);
 
   CF_EXPECT_DEC(n, "0.54030230586813971740");
   cf_free(x);
-  cf_free(y);
+  cf_free(s1[0]);
+  cf_free(s1[1]);
   cf_free(bi);
   cf_free(n);
 

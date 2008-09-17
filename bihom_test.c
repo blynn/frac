@@ -45,18 +45,20 @@ int main() {
   cf_free(s1);
 
   // Check 2 (cos 1)^2 - 1 = cos 2 =
-  s1 = cf_new_cos1();  // TODO: Implement tee, use that instead.
   c1 = cf_new_cos1();
+  cf_t t[2];
+  cf_tee(t, c1);
   mpz_set_si(addarray[0], 2);
   mpz_set_si(addarray[3], -1);
   mpz_set_si(addarray[7], 1);
-  b = cf_new_bihom(s1, c1, addarray);
+  b = cf_new_bihom(t[0], t[1], addarray);
 
   CF_EXPECT_DEC(b, "-0.41614683654714238699");
 
+  cf_free(t[0]);
+  cf_free(t[1]);
   cf_free(b);
   cf_free(c1);
-  cf_free(s1);
 
   for (int i = 0; i < 8; i++) {
     mpz_clear(addarray[i]);
