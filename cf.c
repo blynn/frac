@@ -126,6 +126,13 @@ void cf_put_int(cf_t cf, int n) {
   mpz_clear(z);
 }
 
+void cf_signal(cf_t cf) {
+  sem_post(&cf->demand_sem);
+}
+void cf_wait_special(cf_t cf) {
+  sem_wait(&cf->demand_sem);
+}
+
 void cf_get(mpz_t z, cf_t cf) {
   pthread_mutex_lock(&cf->chan_mu);
   if (!cf->chan) {

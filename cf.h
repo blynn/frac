@@ -25,8 +25,15 @@ int cf_wait(cf_t cf);
 
 void *cf_data(cf_t cf);
 
-// cf_mobius.c:
+void cf_signal(cf_t cf); // For tee.
+void cf_waitspecial(cf_t cf);
 
+// From cf_tee.c:
+//
+void cf_tee(cf_t *out_array, cf_t in);
+
+// From cf_mobius.c:
+//
 // Compute convergents of a simple continued fraction x.
 // Outputs p then q on channel, where p/q is the last convergent computed.
 cf_t cf_new_cf_convergent(cf_t x);

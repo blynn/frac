@@ -1,7 +1,7 @@
 .PHONY: test target clean
 
-CF_OBJS:=cf.o mobius.o famous.o bihom.o taylor.o test.o newton.o
-TESTS:=bihom_test cf_test famous_test mobius_test newton_test
+CF_OBJS:=cf.o mobius.o famous.o bihom.o taylor.o test.o newton.o tee.o
+TESTS:=bihom_test cf_test famous_test mobius_test newton_test tee_test
 BINS:=pi epow
 
 target : $(BINS)
