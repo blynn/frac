@@ -1,11 +1,13 @@
 // Compute the HAKMEM constant.
 //   (sqrt(3/pi^2 + e)/(tanh(sqrt(5))-sin(69))
-// which is
+//
+// Confirm with:
 //  $ echo "pi=4*a(1)
 //          x=2*sqrt(5)
 //          (sqrt(3/pi^2+e(1)))/((e(x)-1)/(e(x)+1)-s(69))" | bc -l
-// Almost exclusively uses techniques described by Gosper.
-// Differences:
+//
+// Almost exclusively uses techniques described by Gosper. Differences:
+//
 //  - Taylor series for cos(1) to find its continued fraction expansion.
 //  - Binary search instead of Newton's method when finding integer part of
 //  solution of quadratic.
@@ -30,19 +32,24 @@ void cf_dump(cf_t cf, int n) {
   mpz_t z;
   mpz_init(z);
   cf_t dec = cf_new_cf_to_decimal(cf);
-  for (int i = 0; i < n; i++) {
+  int i;
+  for (i = 0; i <= n; i++) {
     cf_get(z, dec);
     gmp_printf("%Zd", z);
     if (!(i % 5)) putchar(' ');
     if (!(i % 50)) putchar('\n');
   }
-  printf("\n");
+  if (n % 50) putchar('\n');
   cf_free(dec);
   mpz_clear(z);
 }
 
-int main() {
-  int n = 500;
+int main(int argc, char **argv) {
+  int n = 100;
+  if (argc > 1) {
+    n = atoi(argv[1]);
+    if (n <= 0) n = 100;
+  }
   cf_t c[7];
   cf_t t[6][2];
   mpz_t b[8];

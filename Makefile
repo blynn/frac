@@ -2,7 +2,7 @@
 
 CF_OBJS:=cf.o mobius.o famous.o bihom.o taylor.o test.o newton.o tee.o
 TESTS:=bihom_test cf_test famous_test mobius_test newton_test tee_test
-BINS:=pi epow hakmem
+BINS:=pi hakmem
 
 target : $(BINS)
 
