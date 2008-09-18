@@ -62,7 +62,7 @@ fraction. It takes longer than I had hoped, but it's faster than
 
 There's no API documentation; see the source.
 
-== Demand channels ==
+== Design ==
 
 Threads are the future, if not already the present. Once, single core CPUs grew
 faster at an astounding pace. But limits are being approached, and engineers

@@ -56,10 +56,14 @@ cf_t cf_new_nonregular_to_cf(cf_t x, mpz_t a, mpz_t b, mpz_t c, mpz_t d);
 // Does both of the above at once. Seems slow.
 cf_t cf_new_nonregular_mobius_to_decimal(cf_t x, mpz_t a[4]);
 
+cf_t cf_new_const_nonregular(void *(*fun)(cf_t));
+cf_t cf_new_one_arg_nonregular(void *(*fun)(cf_t), mpz_t z);
+
 // Well-known continued fraction expansions.
 // cf_famous.c:
 // e:
 cf_t cf_new_sqrt2();
+cf_t cf_new_sqrt5();
 cf_t cf_new_e();
 cf_t cf_new_pi();
 cf_t cf_new_tan1();
@@ -74,6 +78,20 @@ cf_t cf_new_tan(mpz_t z);
 
 // Gosper's method for computing bihomographic functions of continued fractions.
 cf_t cf_new_bihom(cf_t x, cf_t y, mpz_t a[8]);
+cf_t cf_new_add(cf_t x, cf_t y);
+cf_t cf_new_sub(cf_t x, cf_t y);
+cf_t cf_new_mul(cf_t x, cf_t y);
+cf_t cf_new_div(cf_t x, cf_t y);
+
+void mpz8_init(mpz_t z[8]);
+void mpz8_clear(mpz_t z[8]);
+void mpz8_set_int(mpz_t z[8],
+    int a, int b, int c, int d,
+    int e, int f, int g, int h);
+void mpz8_set_add(mpz_t z[8]);
+void mpz8_set_sub(mpz_t z[8]);
+void mpz8_set_mul(mpz_t z[8]);
+void mpz8_set_div(mpz_t z[8]);
 
 // From taylor.c:
 cf_t cf_new_sin1();
@@ -87,5 +105,7 @@ cf_t cf_new_cos1();
 //     a4 xy - a0 x + a5 y - a2
 cf_t cf_new_newton(cf_t x, mpz_t a[6], mpz_t lower);
 cf_t cf_new_sqrt(cf_t x);
+cf_t cf_new_sqrt_int(int a, int b);
+cf_t cf_new_sqrt_pq(mpz_t zp, mpz_t zq);
 
 #endif  // __CF_H__

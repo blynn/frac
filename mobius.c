@@ -454,3 +454,79 @@ cf_t cf_new_cf_to_decimal(cf_t x) {
   mpz_clear(one); mpz_clear(zero);
   return res;
 }
+
+struct funarg_s {
+  void *(*fun)(cf_t);
+  mpz_t arg;
+};
+typedef struct funarg_s *funarg_ptr;
+
+static void *one_arg_nonregular(cf_t cf) {
+  funarg_ptr p = cf_data(cf);
+  mpz_t a, b, c, d;
+  mpz_init(a); mpz_init(b); mpz_init(c); mpz_init(d);
+  mpz_set_ui(a, 1); mpz_set_ui(b, 0);
+  mpz_set_ui(c, 0); mpz_set_ui(d, 1);
+  mpz_ptr copy = malloc(sizeof(*copy));
+  mpz_init(copy);
+  mpz_set(copy, p->arg);
+  cf_t nonregular = cf_new(p->fun, copy);
+  cf_t conv = cf_new_nonregular_to_cf(nonregular, a, b, c, d);
+  mpz_t z;
+  mpz_init(z);
+  while(cf_wait(cf)) {
+    cf_get(z, conv);
+    cf_put(cf, z);
+  }
+  mpz_clear(z);
+  cf_free(conv);
+  cf_free(nonregular);
+  mpz_clear(a); mpz_clear(b); mpz_clear(c); mpz_clear(d);
+
+  mpz_clear(p->arg);
+  free(p);
+  return NULL;
+}
+
+cf_t cf_new_one_arg(void *(*fun)(cf_t), mpz_t z) {
+  mpz_ptr p = malloc(sizeof(*p));
+  mpz_init(p);
+  mpz_set(p, z);
+  return cf_new(fun, p);
+}
+
+cf_t cf_new_one_arg_nonregular(void *(*fun)(cf_t), mpz_t z) {
+  funarg_ptr p = malloc(sizeof(*p));
+  p->fun = fun;
+  mpz_init(p->arg);
+  mpz_set(p->arg, z);
+  return cf_new(one_arg_nonregular, p);
+}
+
+static void *nonreg_const(cf_t cf) {
+  funarg_ptr p = cf_data(cf);
+  mpz_t a, b, c, d;
+  mpz_init(a); mpz_init(b); mpz_init(c); mpz_init(d);
+  mpz_set_ui(a, 1); mpz_set_ui(b, 0);
+  mpz_set_ui(c, 0); mpz_set_ui(d, 1);
+  cf_t nonregular = cf_new(p->fun, NULL);
+  cf_t conv = cf_new_nonregular_to_cf(nonregular, a, b, c, d);
+  mpz_clear(a); mpz_clear(b); mpz_clear(c); mpz_clear(d);
+  mpz_t z;
+  mpz_init(z);
+  while(cf_wait(cf)) {
+    cf_get(z, conv);
+    cf_put(cf, z);
+  }
+  mpz_clear(z);
+  cf_free(conv);
+  cf_free(nonregular);
+  free(p);
+  return NULL;
+}
+
+cf_t cf_new_const_nonregular(void *(*fun)(cf_t)) {
+  funarg_ptr p = malloc(sizeof(*p));
+  p->fun = fun;
+  return cf_new(nonreg_const, p);
+}

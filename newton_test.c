@@ -37,10 +37,10 @@ int main() {
   cf_t s1[2];
   cf_tee(s1, x);
   mpz_t b[8];
-  for (i = 0; i < 8; i++) mpz_init(b[i]);
-  mpz_set_si(b[0], -1);
-  mpz_set_si(b[3], 1);
-  mpz_set_si(b[7], 1);
+  mpz8_init(b);
+  mpz8_set_int(b,
+      -1, 0, 0, 1,
+       0, 0, 0, 1);
 
   cf_t bi = cf_new_bihom(s1[0], s1[1], b);
   cf_t n = cf_new_sqrt(bi);
@@ -52,7 +52,11 @@ int main() {
   cf_free(bi);
   cf_free(n);
 
-  for (i = 0; i < 8; i++) mpz_clear(b[i]);
+  x = cf_new_sqrt_int(355, 113);
+  CF_EXPECT_DEC(x, "1.77245392615830279609");
+  cf_free(x);
+
+  mpz8_clear(b);
   for (i = 0; i < 6; i++) mpz_clear(a[i]);
   return 0;
 }

@@ -1,19 +1,27 @@
+// TODO: Use cf_new_const_nonregular instead of regularized_pi by allowing
+// arbitrary starting Mobius function.
 #include <stdio.h>
 #include <stdlib.h>
 #include <gmp.h>
 #include "cf.h"
 
-// sqrt(2) = [1; 2, 2, ...]
-static void *sqrt2(cf_t cf) {
-  cf_put_int(cf, 1);
+// sqrt(n^2 + 1) = [n; 2n, 2n, ...]
+static void *sqrt_easy(cf_t cf) {
+  unsigned int n = (unsigned int) cf_data(cf);
+  cf_put_int(cf, n);
+  n += n;
   while(cf_wait(cf)) {
-    cf_put_int(cf, 2);
+    cf_put_int(cf, n);
   }
   return NULL;
 }
 
 cf_t cf_new_sqrt2() {
-  return cf_new_const(sqrt2);
+  return cf_new(sqrt_easy, (void *) 1);
+}
+
+cf_t cf_new_sqrt5() {
+  return cf_new(sqrt_easy, (void *) 2);
 }
 
 // e = [2; 1, 2, 1, 1, 4, 1, ...]
@@ -74,10 +82,6 @@ static void *regularized_pi(cf_t cf) {
   cf_free(nonregpi);
   mpz_clear(a); mpz_clear(b); mpz_clear(c); mpz_clear(d);
   return NULL;
-}
-
-cf_t cf_new_pi() {
-  return cf_new_const(regularized_pi);
 }
 
 // tan 1 = [1; 1, 1, 3, 1, 5, ...] 
@@ -163,62 +167,18 @@ static void *gauss_tan_expansion(cf_t cf) {
   return NULL;
 }
 
-cf_t cf_new_one_arg(void *(*fun)(cf_t), mpz_t z) {
-  mpz_ptr p = malloc(sizeof(*p));
-  mpz_init(p);
-  mpz_set(p, z);
-  return cf_new(fun, p);
-}
-
-struct funarg_s {
-  void *(*fun)(cf_t);
-  mpz_t arg;
-};
-typedef struct funarg_s *funarg_ptr;
-
-static void *one_arg_nonreg(cf_t cf) {
-  funarg_ptr p = cf_data(cf);
-  mpz_t a, b, c, d;
-  mpz_init(a); mpz_init(b); mpz_init(c); mpz_init(d);
-  mpz_set_ui(a, 1); mpz_set_ui(b, 0);
-  mpz_set_ui(c, 0); mpz_set_ui(d, 1);
-  mpz_ptr copy = malloc(sizeof(*copy));
-  mpz_init(copy);
-  mpz_set(copy, p->arg);
-  cf_t nonreg = cf_new(p->fun, copy);
-  cf_t conv = cf_new_nonregular_to_cf(nonreg, a, b, c, d);
-  mpz_t z;
-  mpz_init(z);
-  while(cf_wait(cf)) {
-    cf_get(z, conv);
-    cf_put(cf, z);
-  }
-  mpz_clear(z);
-  cf_free(conv);
-  cf_free(nonreg);
-  mpz_clear(a); mpz_clear(b); mpz_clear(c); mpz_clear(d);
-
-  mpz_clear(p->arg);
-  free(p);
-  return NULL;
-}
-
-cf_t cf_new_one_arg_nonreg(void *(*fun)(cf_t), mpz_t z) {
-  funarg_ptr p = malloc(sizeof(*p));
-  p->fun = fun;
-  mpz_init(p->arg);
-  mpz_set(p->arg, z);
-  return cf_new(one_arg_nonreg, p);
-}
-
 cf_t cf_new_epow(mpz_t pow) {
-  return cf_new_one_arg_nonreg(exp_expansion, pow);
+  return cf_new_one_arg_nonregular(exp_expansion, pow);
 }
 
 cf_t cf_new_tanh(mpz_t z) {
-  return cf_new_one_arg_nonreg(gauss_tanh_expansion, z);
+  return cf_new_one_arg_nonregular(gauss_tanh_expansion, z);
 }
 
 cf_t cf_new_tan(mpz_t z) {
-  return cf_new_one_arg_nonreg(gauss_tan_expansion, z);
+  return cf_new_one_arg_nonregular(gauss_tan_expansion, z);
+}
+
+cf_t cf_new_pi() {
+  return cf_new_const(regularized_pi);
 }

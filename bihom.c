@@ -185,3 +185,100 @@ cf_t cf_new_bihom(cf_t x, cf_t y, mpz_t a[8]) {
   }
   return cf_new(bihom, p);
 }
+
+void mpz8_init(mpz_t z[8]) {
+  int i;
+  for(i = 0; i < 8; i++) {
+    mpz_init(z[i]);
+  }
+}
+
+void mpz8_clear(mpz_t z[8]) {
+  int i;
+  for(i = 0; i < 8; i++) {
+    mpz_clear(z[i]);
+  }
+}
+
+void mpz8_set_int(mpz_t z[8],
+    int a, int b, int c, int d,
+    int e, int f, int g, int h) {
+  mpz_set_si(z[0], a);
+  mpz_set_si(z[1], b);
+  mpz_set_si(z[2], c);
+  mpz_set_si(z[3], d);
+  mpz_set_si(z[4], e);
+  mpz_set_si(z[5], f);
+  mpz_set_si(z[6], g);
+  mpz_set_si(z[7], h);
+}
+
+void mpz8_set_add(mpz_t z[8]) {
+  mpz8_set_int(z,
+    0, 1, 1, 0,
+    0, 0, 0, 1);
+}
+
+void mpz8_set_sub(mpz_t z[8]) {
+  mpz8_set_int(z,
+    0, 1, -1, 0,
+    0, 0, 0, 1);
+}
+
+void mpz8_set_mul(mpz_t z[8]) {
+  mpz8_set_int(z,
+    1, 0, 0, 0,
+    0, 0, 0, 1);
+}
+
+void mpz8_set_div(mpz_t z[8]) {
+  mpz8_set_int(z,
+    0, 1, 0, 0,
+    0, 0, 1, 0);
+}
+
+cf_t cf_new_add(cf_t x, cf_t y) {
+  bihom_data_ptr p = malloc(sizeof(*p));
+  p->x = x;
+  p->y = y;
+  for (int i = 0; i < 8; i++) mpz_init(p->a[i]);
+  mpz_set_si(p->a[1], 1);
+  mpz_set_si(p->a[2], 1);
+  mpz_set_si(p->a[7], 1);
+
+  return cf_new(bihom, p);
+}
+
+cf_t cf_new_sub(cf_t x, cf_t y) {
+  bihom_data_ptr p = malloc(sizeof(*p));
+  p->x = x;
+  p->y = y;
+  for (int i = 0; i < 8; i++) mpz_init(p->a[i]);
+  mpz_set_si(p->a[1], 1);
+  mpz_set_si(p->a[2], -1);
+  mpz_set_si(p->a[7], 1);
+
+  return cf_new(bihom, p);
+}
+
+cf_t cf_new_mul(cf_t x, cf_t y) {
+  bihom_data_ptr p = malloc(sizeof(*p));
+  p->x = x;
+  p->y = y;
+  for (int i = 0; i < 8; i++) mpz_init(p->a[i]);
+  mpz_set_si(p->a[0], 1);
+  mpz_set_si(p->a[7], 1);
+
+  return cf_new(bihom, p);
+}
+
+cf_t cf_new_div(cf_t x, cf_t y) {
+  bihom_data_ptr p = malloc(sizeof(*p));
+  p->x = x;
+  p->y = y;
+  for (int i = 0; i < 8; i++) mpz_init(p->a[i]);
+  mpz_set_si(p->a[1], 1);
+  mpz_set_si(p->a[6], 1);
+
+  return cf_new(bihom, p);
+}
