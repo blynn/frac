@@ -1,4 +1,4 @@
-.PHONY: test target clean
+.PHONY: test target clean snapshot
 
 CF_OBJS:=cf.o mobius.o famous.o bihom.o taylor.o test.o newton.o tee.o
 TESTS:=bihom_test cf_test famous_test mobius_test newton_test tee_test
@@ -18,6 +18,10 @@ libfrac.a : $(CF_OBJS)
 	#gcc -g -std=c99 -Wall -o $@ $< -lgmp -lpthread -lfrac -L .
 
 test: $(TESTS)
+
+snapshot:
+	git-diff  # Ideally should do nothing.
+	git-archive --format=tar --prefix=frac-snapshot/ HEAD | gzip > frac-snapshot.tar.gz
 
 clean:
 	-rm *.o $(TESTS) $(BINS) libfrac.a
