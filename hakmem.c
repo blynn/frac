@@ -44,6 +44,21 @@ void cf_dump(cf_t cf, int n) {
   mpz_clear(z);
 }
 
+void cf_dump_term(cf_t cf, int n) {
+  mpz_t z;
+  mpz_init(z);
+  int i;
+
+  gmp_printf("[%Zd", z);
+  for (i = 1; i <= n; i++) {
+    cf_get(z, cf);
+    gmp_printf(" %Zd", z);
+  }
+  putchar(']');
+  putchar('\n');
+  mpz_clear(z);
+}
+
 int main(int argc, char **argv) {
   int n = 100;
   if (argc > 1) {
