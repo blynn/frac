@@ -1,3 +1,7 @@
+= frac =
+
+Frac is a C library for computing with http://crypto.stanford.edu/pbc/notes/contfrac/[continued fractions].
+
 == Installation ==
 
 The GMP library is required. Type:
@@ -24,6 +28,66 @@ calculations are complete.
 
 There's no API documentation; see the source.
 
+== Continued fractions ==
+
+The binary representation of 1/3 is infinite. Floating-point numbers, our
+standard tool for working with reals, cannot even handle numbers a young child
+could understand.
+
+In contrast, every rational can be uniquely and exactly represented by a finite
+continued fraction (provided we forbid those with last term 1). Continued
+fractions are immune from oddities such as 1/3 = 0.333... and 1 = 0.999...,
+living in a realm free from the tyranny of binary, or any other base.
+
+Every irrational number can also be uniquely expressed as an infinite continued
+fraction. Many frequently encountered algebraic and transcendental numbers have
+easily computable continued fraction expansions which can be truncated to yield
+approximations with built-in error bounds, unlike floating-point
+approximations, which must be accompanied at all times with their error bounds.
+
+Furthermore, suppose we use floating-point to compute some answer to 100
+decimal places. What if we now want 200 decimal places? Even if we possess the
+first 100 digits and carefully preserve the program state, we must start from
+scratch and redo all our arithmetic with 200 digit precision. If we had used
+continued fractions, we could arbitrarily increase the precision of our answer
+without redoing any work, and without any tedious error analysis.
+
+But we must pay a price for these advantages. We have a representation from
+which we can instantly infer error bounds. A representation for which we may
+arbitrarily increase precision without repeating any calculations. A
+representation which in some sense is the closest we can hope to get to an
+exact number using rationals. Is it any wonder therefore that binary operations
+on continued fractions, whose output must also uphold these high standards, are
+clumsy and convoluted?
+
+These drawbacks are almost certainly why these fascinating creatures remain
+obscure. Yet surely there are some problems that scream for continued
+fractions. How about a screen saver that computes more and more digits of pi,
+each time picking up where it left off?  Or imagine a real-time application
+where all continued fractions simply output the last computed convergent on a
+timer interrupt. Under heavy system load, approximations are coarser but the
+show goes on.
+
+=== Disclaimer ===
+
+Lest my salesmanship backfire, let me temper my anti-floating-point rhetoric.
+Increasing the precision of floating-point operations without redoing work is
+in fact possible for many common cases. For example, Newton's method is
+self-correcting, meaning we may use low precision at first, and increase it for
+future iterations. Even pi enjoys such methods: there exists a formula
+revealing any hexadecimal digit of pi without computing any previous digits,
+though it requires about the same amount of work.
+
+Moreover, several floating-point algorithms converge quadratically or faster,
+thus good implementations will asymptotically outperform continued fractions
+as these often converge linearly.
+
+Nonetheless, for lower accuracies, the smaller overhead may give continued
+fractions the edge in certain problems such as finding the square root of 2.
+Additionally, precision decisions are automatic, for example, one simply needs
+enough bits to hold the last computed convergents. Built-in error analysis
+simplifies and hence accelerates development.
+
 == Bugs and other issues ==
 
 I intend to devote time to projects that operate on real numbers rather than
@@ -47,3 +111,67 @@ this code:
 - The testing infrastructure needs upgrading.
 
 - Much more, e.g. see TODOs sprinkled throughout the code.
+
+== Design ==
+
+I was inspired by Doug McIlroy's paper,
+``http://swtch.com/~rsc/thread/squint.pdf['Squinting at Power Series']'', a
+captivating introduction to the communicating sequential processes (CSP) model
+of concurrent programming: some processes generate coefficients of a power
+series, while other processes read coefficients on input channels and write
+their output on another channel as soon as possible. Each output coefficient is
+written as soon as it is known, before reading more input. Like Unix pipes,
+these processes are connected together to compute sums, products, and so on.
+
+For example, a process that repeatedly spits out 1 on its output channel
+represents the power series 1 + 'x' + 'x'^2^ + ... This is similar to
+running
+
+ $ yes 1
+
+This process could be fed into another process that produces
+the derivative of its input. A Unix equivalent might be:
+
+ $ yes 1 | awk \'{ print (NR-1)*$0 }\'
+
+Continued fractions likewise naturally fit the CSP model, as Gosper suggets.
+The simplest are processes that output terms according to some
+pattern while maintaining barely any internal state. Other processes can then
+consume these terms to compute convergents, decimal expansions, sums, products,
+square roots and so on.
+
+Thus we spawn at least one thread per continued fraction or operation. These
+threads communicate via crude demand channels, sending terms of continued
+fractions back and forth.
+
+For example, consider the
+code for generating 'e' = 2.71828...
+
+..............................................................................
+// e = [2; 1, 2, 1, 1, 4, 1, ...]
+static void *e_expansion(cf_t cf) {
+  int even = 2;
+  cf_put_int(cf, even);
+
+  while(cf_wait(cf)) {
+    cf_put_int(cf, 1);
+    cf_put_int(cf, even);
+    even += 2;
+    cf_put_int(cf, 1);
+  }
+
+  return NULL;
+}
+..............................................................................
+
+The function +cf_put+ places a term on the output channel, and +cf_wait+ is our
+implementation of demand channels, a sort of cooperative multitasking. Without
+it, not only would we have to destroy and clean up after the thread ourselves,
+but more seriously, the thread might consume vast amounts of resources
+computing unwanted terms. The +cf_wait+ functions instructs the thread to stay
+idle. Our threads call this function often, and if it returns zero, our threads
+clean themselves up and exit.
+
+Threads are the future, if not already the present. Multicore systems are
+already commonplace, and as time passes, the number of cores per system will
+steadily march upward. Happily, this suits continued fractions.

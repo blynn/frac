@@ -20,8 +20,8 @@ libfrac.a : $(CF_OBJS)
 test: $(TESTS)
 
 snapshot:
-	git-diff  # Ideally should do nothing.
-	git-archive --format=tar --prefix=frac-snapshot/ HEAD | gzip > frac-snapshot.tar.gz
+	git diff  # Ideally should do nothing.
+	git archive --format=tar --prefix=frac-snapshot/ HEAD | gzip > frac-snapshot.tar.gz
 
 clean:
 	-rm *.o $(TESTS) $(BINS) libfrac.a
